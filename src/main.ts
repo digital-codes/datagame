@@ -1,6 +1,6 @@
 //import { Engine, Scene, ArcRotateCamera, HemisphericLight, Vector3, MeshBuilder, StandardMaterial, Texture, Color3, SceneLoader, InstancedMesh } from "babylonjs";
-import { Engine, Scene, ArcRotateCamera, HemisphericLight, Vector3, Mesh, AbstractMesh, ImportMeshAsync, MeshBuilder, StandardMaterial, Texture, Color3, SceneLoader, InstancedMesh } from "@babylonjs/core";
-import { PhysicsImpostor, CannonJSPlugin } from "@babylonjs/core/Physics";
+import { Engine, Scene, ArcRotateCamera, HemisphericLight, MotorEnabledJoint, Vector3, Mesh, AbstractMesh, ImportMeshAsync, MeshBuilder, StandardMaterial, Texture, Color3, SceneLoader, InstancedMesh } from "@babylonjs/core";
+import { PhysicsImpostor, CannonJSPlugin, PhysicsJoint } from "@babylonjs/core/Physics";
 import * as CANNON from "cannon-es";
 import "@babylonjs/loaders";
 import "@babylonjs/loaders/glTF";
@@ -14,6 +14,9 @@ document.body.appendChild(canvas);
 
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
+
+// not sure if this is needed
+window.CANNON = CANNON;
 
 let globalTime = 0;
 
@@ -93,7 +96,7 @@ const loadModel = async (path: string) => {
   }
 
   // Create 2 instances of model2 (physics objects)
-  const droppers: InstancedMesh[] = [];
+  const droppers: Mesh[] = [];
   // model2.material = redMat;
   for (let i = 0; i < 3; i++) {
     const mdl = i == 0 ? model2 : model3;
@@ -116,6 +119,35 @@ const loadModel = async (path: string) => {
 
     droppers.push(inst);
   }
+
+  // add joint between drops
+  /*
+  const joint = new CANNON.DistanceConstraint(droppers[0].physicsImpostor.physicsBody, droppers[1].physicsImpostor.physicsBody, {
+    distance: 1,
+    maxForce: 1000,
+    localAnchorA: new CANNON.Vec3(0, 0, 0),
+    localAnchorB: new CANNON.Vec3(0, 0, 0),
+  });
+  */
+  /*
+  var joint = new PhysicsJoint(PhysicsJoint.SpringJoint, {
+  length: 5,
+  stiffness: .5,
+  damping: 0.1
+  });
+  droppers[1].physicsImpostor.addJoint(droppers[0].physicsImpostor, joint);  
+  */
+     //Add Joint
+    const joint = new MotorEnabledJoint(PhysicsJoint.HingeJoint, {
+      mainPivot: new Vector3(0, 0, 0),
+          connectedPivot: new Vector3(5, 0, 0),
+          mainAxis: new Vector3(0, 1, 1),
+          connectedAxis: new Vector3(0, 1, 1),
+    }); 
+    droppers[1].physicsImpostor.addJoint(droppers[2].physicsImpostor, joint);  
+    joint.setMotor(0);
+
+  
 
   // Main loop
   scene.onBeforeRenderObservable.add(() => {
@@ -141,6 +173,7 @@ const loadModel = async (path: string) => {
       if (globalTime == 150 && inst) {
         // impulse on dropper 0
         droppers[0].physicsImpostor.applyImpulse(new Vector3(.2, 3, .2), droppers[0].getAbsolutePosition());
+        joint.setMotor(3);
       }
 
       if (inst && inst.position.y < 0.5) {
