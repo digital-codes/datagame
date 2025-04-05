@@ -82,6 +82,10 @@ const loadModel = async (path: string) => {
   const texMat = new StandardMaterial("texMat", scene);
   texMat.diffuseTexture = new Texture("/texture1.png", scene);
 
+  // Material for model3 (image texture)
+  const texMat2 = new StandardMaterial("texMat", scene);
+  texMat2.diffuseTexture = new Texture("/texture2.png", scene);
+
   // Create 2 instances of model1 (moveable)
   const movers: Mesh[] = [];
   // model1.material = texMat;
@@ -107,7 +111,7 @@ const loadModel = async (path: string) => {
     inst.scaling = new Vector3(.3,.3,.2);
 
     inst.position = new Vector3(i * 10 - 10, (i+1)*5 , i*15 - 8);
-    inst.material = i == 1 ? redMat : texMat;
+    inst.material = i == 0 ? redMat : i == 1 ? texMat : texMat2;
     inst.physicsImpostor = new PhysicsImpostor(
       inst, PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.3 }, scene
     );
