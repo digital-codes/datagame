@@ -5,6 +5,10 @@ import * as CANNON from "cannon-es";
 import "@babylonjs/loaders";
 import "@babylonjs/loaders/glTF";
 
+import { Inspector } from '@babylonjs/inspector';
+
+import {createLeafletGround} from "./map.ts"
+
 const canvas = document.createElement("canvas");
 canvas.style.width = "100%";
 canvas.style.height = "100%";
@@ -14,6 +18,8 @@ document.body.appendChild(canvas);
 
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
+
+// Inspector.Show(scene, {});
 
 // not sure if this is needed
 window.CANNON = CANNON;
@@ -31,10 +37,14 @@ scene.enablePhysics(new Vector3(0, 0, 0), new CannonJSPlugin(true, 10, CANNON));
 let gravityEnabled = false;
 
 // Ground with PNG texture
-const ground = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+/* 
+const ground = MeshBuilder.CreateGround("ground", { width: 512, height: 512 }, scene);
 const groundMat = new StandardMaterial("groundMat", scene);
 groundMat.diffuseTexture = new Texture("/ground.png", scene);
 ground.material = groundMat;
+*/
+const ground = await createLeafletGround(scene, 49.0102, 8.4192, 15, 4); // Eiffel Tower example
+
 ground.checkCollisions = true;
 ground.physicsImpostor = new PhysicsImpostor(
   ground, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5 }, scene
