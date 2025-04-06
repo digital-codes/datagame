@@ -48,10 +48,10 @@ import {
   
         await new Promise<void>((res, rej) => {
           img.onload = () => {
-            const offX = count + dx;
-            const offY = count + dy;
-            //console.log("drawing tile", x, y, offX, offY);
             ctx.drawImage(img, (count + dx) * tileSize, (count + dy) * tileSize, tileSize, tileSize);
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            ctx.strokeRect((count + dx) * tileSize, (count + dy) * tileSize, tileSize, tileSize);
             res();
           };
           img.onerror = rej;
@@ -84,8 +84,8 @@ import {
     const { x: tileXExact, y: tileYExact } = latLonToTileXY(centerLat, centerLon, zoom);
 
     // Integer tile range
-    const startX = Math.round(tileXExact);
-    const startY = Math.round(tileYExact);
+    const startX = Math.floor(tileXExact);
+    const startY = Math.floor(tileYExact);
     
     // Offset of center lat/lon within the tile grid
     const offsetX = (tileXExact - startX) * tileSize;
@@ -97,7 +97,6 @@ import {
   
     const texture = new DynamicTexture("leafletMap", canvas, scene, false);
     texture.update()
-    console.log("texture", texture);
     return { texture: texture as DynamicTexture, dims: [offsetX, offsetY, canvasSize] };
   }
 

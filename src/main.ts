@@ -7,7 +7,7 @@ import "@babylonjs/loaders/glTF";
 
 import { Inspector } from '@babylonjs/inspector';
 
-import {createLeafletTexture, drawTiles} from "./map.ts"
+import { createLeafletTexture, drawTiles } from "./map.ts"
 
 const canvas = document.createElement("canvas");
 canvas.style.width = "100%";
@@ -18,6 +18,8 @@ document.body.appendChild(canvas);
 
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
+
+const mapDebug = true
 
 // Inspector.Show(scene, {});
 
@@ -43,25 +45,42 @@ const groundMat = new StandardMaterial("groundMat", scene);
 groundMat.diffuseTexture = new Texture("/ground.png", scene);
 ground.material = groundMat;
 */
-const ground = MeshBuilder.CreateGround("ground", { width: 512, height: 512 }, scene);
+const groundSize = 512
+const neighbourTiles = 1; // number of neighbours
+const ground = MeshBuilder.CreateGround("ground", { width: groundSize, height: groundSize }, scene);
 const mapCenters = {
   "karlsruhe": { lat: 49.009229, lon: 8.403903 },
+  "kaKunst": { lat: 49.011025, lon: 8.399885 },
+  "kaZoo": { lat: 48.99672, lon: 8.40214 },
 }
 // Create leaflet texture
 const gtx = await createLeafletTexture(scene,
-  mapCenters.karlsruhe.lat, mapCenters.karlsruhe.lon, 17, 1); 
-  console.log("groundTexture", gtx);
-  const groundMat = new StandardMaterial("leafletMat", scene);
-  groundMat.diffuseTexture = gtx.texture;
-  groundMat.specularColor = new Color3(0.5, 0.5, 0.5); // Adjust reflectivity
-  groundMat.specularPower = 100; // Control the sharpness of the reflection
+  mapCenters.karlsruhe.lat, mapCenters.karlsruhe.lon, 14, 2);
+console.log("groundTexture", gtx.dims);
+const groundMat = new StandardMaterial("leafletMat", scene);
+groundMat.diffuseTexture = gtx.texture;
+groundMat.specularColor = new Color3(0.5, 0.5, 0.5); // Adjust reflectivity
+groundMat.specularPower = 100; // Control the sharpness of the reflection
+const groundScale = groundSize / gtx.dims[2];
+console.log("groundScale", groundScale);
 
-  ground.material = groundMat;
-  //ground.rotation = new Vector3(0, Math.PI, 0);
+ground.material = groundMat;
+ground.rotation = new Vector3(0, Math.PI, 0);
 ground.checkCollisions = true;
 ground.physicsImpostor = new PhysicsImpostor(
   ground, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5 }, scene
 );
+
+if (mapDebug) {
+  const tileSize = 256
+  const x = -(gtx.dims[0] - tileSize / 2) * groundScale
+  const y = (gtx.dims[1] - tileSize / 2) * groundScale
+  const blueCube = MeshBuilder.CreateBox("blueCube", { size: 10 }, scene);
+  blueCube.position = new Vector3(x, 5, y);
+  const blueMat = new StandardMaterial("blueMat", scene);
+  blueMat.diffuseColor = Color3.Blue();
+  blueCube.material = blueMat;
+}
 
 // Helper: recursively find first mesh with geometry
 function findFirstMeshWithGeometry(meshes: AbstractMesh[]): Mesh | null {
@@ -83,8 +102,8 @@ const loadModel = async (path: string) => {
 
 (async () => {
   const model1 = await loadModel("model1.glb");
-  const model2 = await loadModel("model2.glb") 
-  const model3 = await loadModel("model3.glb") 
+  const model2 = await loadModel("model2.glb")
+  const model3 = await loadModel("model3.glb")
 
   model1.setEnabled(false);
   model1.isVisible = false;
@@ -117,7 +136,7 @@ const loadModel = async (path: string) => {
     inst.isVisible = true;
     inst.setEnabled(true);
     // const inst = model1.createInstance("mover" + i);
-    inst.position = new Vector3(i * 5 - 2, i*5, 0);
+    inst.position = new Vector3(i * 5 - 2, i * 5, 0);
     if (i == 0) inst.material = blueMat;
     movers.push(inst);
   }
@@ -131,9 +150,9 @@ const loadModel = async (path: string) => {
     inst.isVisible = true;
     inst.setEnabled(true);
     // const inst = model2.createInstance("dropper" + i);
-    inst.scaling = new Vector3(.3,.3,.2);
+    inst.scaling = new Vector3(.3, .3, .2);
 
-    inst.position = new Vector3(i * 10 - 10, (i+1)*5 , i*15 - 8);
+    inst.position = new Vector3(i * 10 - 10, (i + 1) * 5, i * 15 - 8);
     inst.material = i == 0 ? redMat : i == 1 ? texMat : texMat2;
     inst.physicsImpostor = new PhysicsImpostor(
       inst, PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.3 }, scene
@@ -166,17 +185,17 @@ const loadModel = async (path: string) => {
   });
   droppers[1].physicsImpostor.addJoint(droppers[0].physicsImpostor, joint);  
   */
-     //Add Joint
-    const joint = new MotorEnabledJoint(PhysicsJoint.HingeJoint, {
-      mainPivot: new Vector3(0, 0, 0),
-          connectedPivot: new Vector3(5, 0, 0),
-          mainAxis: new Vector3(0, 1, 1),
-          connectedAxis: new Vector3(0, 1, 1),
-    }); 
-    droppers[1].physicsImpostor.addJoint(droppers[2].physicsImpostor, joint);  
-    joint.setMotor(0);
+  //Add Joint
+  const joint = new MotorEnabledJoint(PhysicsJoint.HingeJoint, {
+    mainPivot: new Vector3(0, 0, 0),
+    connectedPivot: new Vector3(5, 0, 0),
+    mainAxis: new Vector3(0, 1, 1),
+    connectedAxis: new Vector3(0, 1, 1),
+  });
+  droppers[1].physicsImpostor.addJoint(droppers[2].physicsImpostor, joint);
+  joint.setMotor(0);
 
-  
+
 
   // Main loop
   scene.onBeforeRenderObservable.add(() => {
@@ -208,7 +227,7 @@ const loadModel = async (path: string) => {
       if (inst && inst.position.y < 0.5) {
         inst.dispose();
         droppers[i] = null!;
-        console.log("Droppers: disposed",i);
+        console.log("Droppers: disposed", i);
       }
     });
   });
