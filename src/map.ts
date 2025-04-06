@@ -9,7 +9,7 @@ import {
   } from "@babylonjs/core";
   
   // Convert lat/lon to tile numbers at a given zoom
-  function latLonToTileXY(lat: number, lon: number, zoom: number): { x: number; y: number } {
+  function latLonToTileXY_int(lat: number, lon: number, zoom: number): { x: number; y: number } {
     const latRad = (lat * Math.PI) / 180;
     const n = Math.pow(2, zoom);
     const x = Math.floor((lon + 180) / 360 * n);
@@ -17,6 +17,15 @@ import {
     return { x, y };
   }
   
+  function latLonToTileXY(lat: number, lon: number, zoom: number): { x: number; y: number } {
+    const latRad = (lat * Math.PI) / 180;
+    const n = Math.pow(2, zoom);
+    const x = (lon + 180) / 360 * n;
+    const y = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
+    return { x, y }; // float values now
+  }
+  
+
   // Get OpenStreetMap tile URL
   function getTileUrl(x: number, y: number, z: number): string {
     //return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
@@ -29,8 +38,8 @@ import {
   // Draw multiple tiles to a canvas
   async function drawTiles(ctx: CanvasRenderingContext2D, tileX: number, tileY: number, zoom: number, count: number) {
     const tileSize = 256;
-    for (let dx = 0; dx < count; dx++) {
-      for (let dy = 0; dy < count; dy++) {
+    for (let dx = -count; dx <= count; dx++) {
+      for (let dy = -count; dy <= count; dy++) {
         const x = tileX + dx;
         const y = tileY + dy;
         const img = new Image();
@@ -39,8 +48,10 @@ import {
   
         await new Promise<void>((res, rej) => {
           img.onload = () => {
-            console.log("draoing tile")
-            ctx.drawImage(img, dx * tileSize, dy * tileSize, tileSize, tileSize);
+            const offX = count + dx;
+            const offY = count + dy;
+            //console.log("drawing tile", x, y, offX, offY);
+            ctx.drawImage(img, (count + dx) * tileSize, (count + dy) * tileSize, tileSize, tileSize);
             res();
           };
           img.onerror = rej;
@@ -55,20 +66,32 @@ import {
     centerLat: number,
     centerLon: number,
     zoom: number,
-    tileCount: number = 2
+    tileCount: number = 1,
+    size = 1000
+
   ): Promise<Mesh> {
     const tileSize = 256;
-    const canvasSize = tileCount * tileSize;
+    const canvasSize = (tileCount * 2 + 1) * tileSize;
   
     const canvas = document.createElement("canvas");
     canvas.width = canvasSize;
     canvas.height = canvasSize;
     const ctx = canvas.getContext("2d")!;
-  
+    /*
     const { x: centerX, y: centerY } = latLonToTileXY(centerLat, centerLon, zoom);
     const startX = centerX - Math.floor(tileCount / 2);
     const startY = centerY - Math.floor(tileCount / 2);
+    */
+    const { x: tileXExact, y: tileYExact } = latLonToTileXY(centerLat, centerLon, zoom);
 
+    // Integer tile range
+    const startX = Math.round(tileXExact);
+    const startY = Math.round(tileYExact);
+    
+    // Offset of center lat/lon within the tile grid
+    const offsetX = (tileXExact - startX) * tileSize;
+    const offsetY = (tileYExact - startY) * tileSize;
+    console.log("offset", offsetX, offsetY);
     //console.log(centerLat,centerLon)
     //console.log(startX,startY,tileCount)
     await drawTiles(ctx, startX, startY, zoom, tileCount);
@@ -78,11 +101,16 @@ import {
     texture.update()
     mat.diffuseTexture = texture;
     mat.specularColor = new Color3(0.5, 0.5, 0.5); // Adjust reflectivity
-    mat.specularPower = 64; // Control the sharpness of the reflection
+    mat.specularPower = 100; // Control the sharpness of the reflection
   
-    const size = 512 //10 * tileCount; // scale up for scene size
+    // const size = tileSize * tileCount; // scale up for scene size
     const ground = MeshBuilder.CreateGround("leafletGround", { width: size, height: size }, scene);
+    const scale = size / canvasSize;
     ground.material = mat;
+    // Shift ground to align exact map center to Babylon (0, 0, 0)
+    ground.position.x = offsetY * scale // 0 // offsetX / scale // > 0 ? (offsetX - tileSize / 2)  : (offsetX + tileSize / 2)// * worldTileSize - worldTileSize/2 //tileSize * tileCount / 2;
+    ground.position.z = -offsetX * scale // 0 // offsetY / scale // > 0 ? (-offsetY + tileSize / 2)  : (offsetY + tileSize / 2) // * worldTileSize - worldTileSize/2 // tileSize * tileCount / 2;
+    // ground.rotation = new Vector3(0, Math.PI, 0);
   
     // Optional physics
     // ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0 }, scene);

@@ -43,8 +43,12 @@ const groundMat = new StandardMaterial("groundMat", scene);
 groundMat.diffuseTexture = new Texture("/ground.png", scene);
 ground.material = groundMat;
 */
-const ground = await createLeafletGround(scene, 49.0102, 8.4192, 15, 4); // Eiffel Tower example
-
+const mapCenters = {
+  "karlsruhe": { lat: 49.009229, lon: 8.403903 },
+}
+const ground = await createLeafletGround(scene, 
+  mapCenters.karlsruhe.lat, mapCenters.karlsruhe.lon, 17, 1); // Eiffel Tower example
+//ground.rotation = new Vector3(0, Math.PI, 0);
 ground.checkCollisions = true;
 ground.physicsImpostor = new PhysicsImpostor(
   ground, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5 }, scene
@@ -126,9 +130,11 @@ const loadModel = async (path: string) => {
       inst, PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.3 }, scene
     );
     inst.physicsImpostor.onCollideEvent = (self, other) => {
+      /*
       console.log(`onCollideEvent: self velocity: ${i}: ${self.getLinearVelocity()}, other velocity: ${other.getLinearVelocity()}`);
       const selfPosition = self.object?.getAbsolutePosition();
       console.log(`onCollideEvent: self position:  ${i}: ${selfPosition}`);
+      */
     };
 
     droppers.push(inst);
