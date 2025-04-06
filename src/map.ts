@@ -60,8 +60,49 @@ import {
     }
   }
   
+
+  
+  async function createLeafletTexture(
+    scene: Scene,
+    centerLat: number,
+    centerLon: number,
+    zoom: number,
+    tileCount: number = 1,
+  ): Promise<{ texture: DynamicTexture; dims: number[] }> {
+    const tileSize = 256;
+    const canvasSize = (tileCount * 2 + 1) * tileSize;
+  
+    const canvas = document.createElement("canvas");
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    const ctx = canvas.getContext("2d")!;
+    /*
+    const { x: centerX, y: centerY } = latLonToTileXY(centerLat, centerLon, zoom);
+    const startX = centerX - Math.floor(tileCount / 2);
+    const startY = centerY - Math.floor(tileCount / 2);
+    */
+    const { x: tileXExact, y: tileYExact } = latLonToTileXY(centerLat, centerLon, zoom);
+
+    // Integer tile range
+    const startX = Math.round(tileXExact);
+    const startY = Math.round(tileYExact);
+    
+    // Offset of center lat/lon within the tile grid
+    const offsetX = (tileXExact - startX) * tileSize;
+    const offsetY = (tileYExact - startY) * tileSize;
+    console.log("offset", offsetX, offsetY);
+    //console.log(centerLat,centerLon)
+    //console.log(startX,startY,tileCount)
+    await drawTiles(ctx, startX, startY, zoom, tileCount);
+  
+    const texture = new DynamicTexture("leafletMap", canvas, scene, false);
+    texture.update()
+    console.log("texture", texture);
+    return { texture: texture as DynamicTexture, dims: [offsetX, offsetY, canvasSize] };
+  }
+
   // Main function to create the leaflet ground
-  export async function createLeafletGround(
+  async function createLeafletGround(
     scene: Scene,
     centerLat: number,
     centerLon: number,
@@ -118,3 +159,4 @@ import {
     return ground;
   }
   
+export {createLeafletGround, latLonToTileXY, drawTiles, createLeafletTexture }

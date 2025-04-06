@@ -7,7 +7,7 @@ import "@babylonjs/loaders/glTF";
 
 import { Inspector } from '@babylonjs/inspector';
 
-import {createLeafletGround} from "./map.ts"
+import {createLeafletTexture, drawTiles} from "./map.ts"
 
 const canvas = document.createElement("canvas");
 canvas.style.width = "100%";
@@ -43,12 +43,21 @@ const groundMat = new StandardMaterial("groundMat", scene);
 groundMat.diffuseTexture = new Texture("/ground.png", scene);
 ground.material = groundMat;
 */
+const ground = MeshBuilder.CreateGround("ground", { width: 512, height: 512 }, scene);
 const mapCenters = {
   "karlsruhe": { lat: 49.009229, lon: 8.403903 },
 }
-const ground = await createLeafletGround(scene, 
-  mapCenters.karlsruhe.lat, mapCenters.karlsruhe.lon, 17, 1); // Eiffel Tower example
-//ground.rotation = new Vector3(0, Math.PI, 0);
+// Create leaflet texture
+const gtx = await createLeafletTexture(scene,
+  mapCenters.karlsruhe.lat, mapCenters.karlsruhe.lon, 17, 1); 
+  console.log("groundTexture", gtx);
+  const groundMat = new StandardMaterial("leafletMat", scene);
+  groundMat.diffuseTexture = gtx.texture;
+  groundMat.specularColor = new Color3(0.5, 0.5, 0.5); // Adjust reflectivity
+  groundMat.specularPower = 100; // Control the sharpness of the reflection
+
+  ground.material = groundMat;
+  //ground.rotation = new Vector3(0, Math.PI, 0);
 ground.checkCollisions = true;
 ground.physicsImpostor = new PhysicsImpostor(
   ground, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5 }, scene
