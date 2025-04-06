@@ -46,23 +46,26 @@ groundMat.diffuseTexture = new Texture("/ground.png", scene);
 ground.material = groundMat;
 */
 const groundSize = 512
-const neighbourTiles = 1; // number of neighbours
 const ground = MeshBuilder.CreateGround("ground", { width: groundSize, height: groundSize }, scene);
 const mapCenters = {
-  "karlsruhe": { lat: 49.009229, lon: 8.403903 },
+  "kaMarkt": { lat: 49.009229, lon: 8.403903 },
   "kaKunst": { lat: 49.011025, lon: 8.399885 },
   "kaZoo": { lat: 48.99672, lon: 8.40214 },
 }
 // Create leaflet texture
 const gtx = await createLeafletTexture(scene,
-  mapCenters.karlsruhe.lat, mapCenters.karlsruhe.lon, 14, 2);
-console.log("groundTexture", gtx.dims);
+  mapCenters.kaZoo.lat, mapCenters.kaZoo.lon, 14, 1);
+console.log("groundTexture dims", gtx.dims);
 const groundMat = new StandardMaterial("leafletMat", scene);
 groundMat.diffuseTexture = gtx.texture;
 groundMat.specularColor = new Color3(0.5, 0.5, 0.5); // Adjust reflectivity
 groundMat.specularPower = 100; // Control the sharpness of the reflection
 const groundScale = groundSize / gtx.dims[2];
 console.log("groundScale", groundScale);
+// compute offset of target to center
+const tileSize = 256
+const offsetX = -(gtx.dims[0] - tileSize / 2) * groundScale
+const offsetY = (gtx.dims[1] - tileSize / 2) * groundScale
 
 ground.material = groundMat;
 ground.rotation = new Vector3(0, Math.PI, 0);
@@ -72,11 +75,8 @@ ground.physicsImpostor = new PhysicsImpostor(
 );
 
 if (mapDebug) {
-  const tileSize = 256
-  const x = -(gtx.dims[0] - tileSize / 2) * groundScale
-  const y = (gtx.dims[1] - tileSize / 2) * groundScale
   const blueCube = MeshBuilder.CreateBox("blueCube", { size: 10 }, scene);
-  blueCube.position = new Vector3(x, 5, y);
+  blueCube.position = new Vector3(offsetX, 5, offsetY);
   const blueMat = new StandardMaterial("blueMat", scene);
   blueMat.diffuseColor = Color3.Blue();
   blueCube.material = blueMat;
