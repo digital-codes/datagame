@@ -21,7 +21,7 @@ const scene = new Scene(engine);
 
 const mapDebug = true
 
-// Inspector.Show(scene, {});
+Inspector.Show(scene, {});
 
 // not sure if this is needed
 window.CANNON = CANNON;
@@ -195,6 +195,50 @@ const loadModel = async (path: string) => {
   droppers[1].physicsImpostor.addJoint(droppers[2].physicsImpostor, joint);
   joint.setMotor(0);
 
+  const bld = await loadModel("buildings.glb");
+  if (bld) {
+    const buildings = bld.clone("buildings");
+
+    const boundingInfo = buildings.getBoundingInfo();
+    const boundingBox = boundingInfo.boundingBox;
+
+    console.log("Buildings Bounding Box:");
+    console.log("Minimum:", boundingBox.minimum);
+    console.log("Maximum:", boundingBox.maximum);
+    // Scale buildings to match ground dimensions and position at center
+    const groundBoundingInfo = ground.getBoundingInfo();
+    const groundSize = groundBoundingInfo.boundingBox.maximum.subtract(groundBoundingInfo.boundingBox.minimum);
+
+    const buildingsBoundingInfo = buildings.getBoundingInfo();
+    const buildingsSize = buildingsBoundingInfo.boundingBox.maximum.subtract(buildingsBoundingInfo.boundingBox.minimum);
+
+    const scaleFactor = Math.min(
+      groundSize.x / buildingsSize.x,
+      groundSize.z / buildingsSize.z
+    );
+    console.log("Ground size", groundSize);
+    console.log("Buildings size", buildingsSize);
+    console.log("Scale factor", scaleFactor); 
+    buildings.scaling = new Vector3(scaleFactor, 1, scaleFactor);
+
+    // Center buildings on the ground
+    const groundCenter = groundBoundingInfo.boundingBox.centerWorld;
+    const buildingsCenter = buildingsBoundingInfo.boundingBox.centerWorld;
+
+    const offset = groundCenter.subtract(buildingsCenter);
+    console.log("Ground center", groundCenter);
+    console.log("Buildings center", buildingsCenter);
+    console.log("Offset", offset);
+    buildings.position = new Vector3(offset.x, 0, offset.z);
+    // Set buildings position to ground center
+    //buildings.position.addInPlace(offset);
+    buildings.setEnabled(true);
+    buildings.isVisible = true;
+    //buildings.position = offset;
+    buildings.material = blueMat;
+    console.log("Buildings final position:", buildings.position);
+    console.log("Buildings final scaling:", buildings.scaling);
+  }
 
 
   // Main loop
