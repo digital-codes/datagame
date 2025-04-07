@@ -195,7 +195,11 @@ const loadModel = async (path: string) => {
   droppers[1].physicsImpostor.addJoint(droppers[2].physicsImpostor, joint);
   joint.setMotor(0);
 
+  // create buildings layer for geojson like so:
+  // python3 geoMesh.py Gebaeudeflaeche_merged.geojson -s 2 -z -yz  -c
   const bld = await loadModel("buildings.glb");
+  bld.setEnabled(false);
+  bld.isVisible = false;
   if (bld) {
     const buildings = bld.clone("buildings");
 
@@ -219,25 +223,14 @@ const loadModel = async (path: string) => {
     console.log("Ground size", groundSize);
     console.log("Buildings size", buildingsSize);
     console.log("Scale factor", scaleFactor); 
-    buildings.scaling = new Vector3(scaleFactor, 1, scaleFactor);
+    buildings.scaling = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 
-    // Center buildings on the ground
-    const groundCenter = groundBoundingInfo.boundingBox.centerWorld;
-    const buildingsCenter = buildingsBoundingInfo.boundingBox.centerWorld;
-
-    const offset = groundCenter.subtract(buildingsCenter);
-    console.log("Ground center", groundCenter);
-    console.log("Buildings center", buildingsCenter);
-    console.log("Offset", offset);
-    buildings.position = new Vector3(offset.x, 0, offset.z);
-    // Set buildings position to ground center
-    //buildings.position.addInPlace(offset);
     buildings.setEnabled(true);
     buildings.isVisible = true;
-    //buildings.position = offset;
+    buildings.position = new Vector3(-1, 10, -82);
+    // rotate like ground texture
+    buildings.rotation = new Vector3(Math.PI,0,Math.PI)
     buildings.material = blueMat;
-    console.log("Buildings final position:", buildings.position);
-    console.log("Buildings final scaling:", buildings.scaling);
   }
 
 
