@@ -9,7 +9,7 @@ import { Inspector } from '@babylonjs/inspector';
 
 import { createLeafletTexture, drawTiles } from "./map.ts"
 
-import { createPerson } from "./person.ts";
+import { createPerson, animatePerson } from "./person.ts";
 
 const canvas = document.createElement("canvas");
 canvas.style.width = "100%";
@@ -198,11 +198,14 @@ const loadModel = async (path: string) => {
   joint.setMotor(0);
 
   // load person
-  const person = createPerson(scene,10);
+  const person = await createPerson(scene,10);
   //person.head.position = new Vector3(1, 25, 1);
   person.body.position = new Vector3(1, 20, 1);
-
+    function startWalking(person, scene) {
+      animatePerson(person, scene);
+  }
   
+
   // create buildings layer for geojson like so:
   // python3 geoMesh.py Gebaeudeflaeche_merged.geojson -s 2 -z -yz  -c
   const bld = null //await loadModel("buildings.glb");
@@ -267,6 +270,7 @@ const loadModel = async (path: string) => {
         // impulse on dropper 0
         droppers[0].physicsImpostor.applyImpulse(new Vector3(.2, 3, .2), droppers[0].getAbsolutePosition());
         joint.setMotor(3);
+        startWalking(person, scene);
       }
 
       if (inst && inst.position.y < 0.5) {

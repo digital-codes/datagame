@@ -52,4 +52,32 @@ function createPerson(scene: Scene, scale:Number = 1) {
     return ragdoll;
 }
 
-export { createPerson };
+function applyTorque(impostor, torqueVec) {
+    impostor.applyTorque(torqueVec);
+}
+
+function animatePerson(ragdoll, scene:Scene) {
+    let time = 0;
+
+    scene.onBeforeRenderObservable.add(() => {
+        time += scene.getEngine().getDeltaTime() / 1000;
+
+        const frequency = 2;
+        const amplitude = 2;
+
+        const leftLegTorque = Math.sin(time * frequency) * amplitude;
+        const rightLegTorque = -leftLegTorque;
+
+        const leftArmTorque = -leftLegTorque * 0.5;
+        const rightArmTorque = -rightLegTorque * 0.5;
+
+        applyTorque(ragdoll.leftLeg.physicsImpostor, new Vector3(leftLegTorque, 0, 0));
+        applyTorque(ragdoll.rightLeg.physicsImpostor, new Vector3(rightLegTorque, 0, 0));
+        applyTorque(ragdoll.leftArm.physicsImpostor, new Vector3(leftArmTorque, 0, 0));
+        applyTorque(ragdoll.rightArm.physicsImpostor, new Vector3(rightArmTorque, 0, 0));
+    });
+}
+
+
+
+export { createPerson, animatePerson };
