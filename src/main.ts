@@ -9,6 +9,8 @@ import { Inspector } from '@babylonjs/inspector';
 
 import { createLeafletTexture, drawTiles } from "./map.ts"
 
+import { createPerson } from "./person.ts";
+
 const canvas = document.createElement("canvas");
 canvas.style.width = "100%";
 canvas.style.height = "100%";
@@ -195,13 +197,19 @@ const loadModel = async (path: string) => {
   droppers[1].physicsImpostor.addJoint(droppers[2].physicsImpostor, joint);
   joint.setMotor(0);
 
+  // load person
+  const person = createPerson(scene,10);
+  //person.head.position = new Vector3(1, 25, 1);
+  person.body.position = new Vector3(1, 20, 1);
+
+  
   // create buildings layer for geojson like so:
   // python3 geoMesh.py Gebaeudeflaeche_merged.geojson -s 2 -z -yz  -c
-  const bld = await loadModel("buildings.glb");
-  bld.setEnabled(false);
-  bld.isVisible = false;
+  const bld = null //await loadModel("buildings.glb");
   if (bld) {
-    const buildings = bld.clone("buildings");
+      bld.setEnabled(false);
+      bld.isVisible = false;
+      const buildings = bld.clone("buildings");
 
     const boundingInfo = buildings.getBoundingInfo();
     const boundingBox = boundingInfo.boundingBox;
