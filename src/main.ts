@@ -21,7 +21,8 @@ document.body.appendChild(canvas);
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
 
-const mapDebug = true
+const useMap = false
+const mapDebug = false
 
 Inspector.Show(scene, {});
 
@@ -55,6 +56,8 @@ const mapCenters = {
   "kaZoo": { lat: 48.99672, lon: 8.40214 },
 }
 // Create leaflet texture
+if (useMap) {
+
 const gtx = await createLeafletTexture(scene,
   mapCenters.kaZoo.lat, mapCenters.kaZoo.lon, 14, 1);
 console.log("groundTexture dims", gtx.dims);
@@ -83,6 +86,16 @@ if (mapDebug) {
   blueMat.diffuseColor = Color3.Blue();
   blueCube.material = blueMat;
 }
+} else {
+  const groundMat = new StandardMaterial("groundMat", scene);
+  groundMat.diffuseColor = Color3.Gray();
+  ground.material = groundMat;
+}
+
+ground.checkCollisions = true;
+ground.physicsImpostor = new PhysicsImpostor(
+  ground, PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5 }, scene
+)
 
 // Helper: recursively find first mesh with geometry
 function findFirstMeshWithGeometry(meshes: AbstractMesh[]): Mesh | null {
@@ -198,7 +211,9 @@ const loadModel = async (path: string) => {
   joint.setMotor(0);
 
   // load person
-  const person = await createSkinnedPerson(scene, 10);
+  const person = createSkinnedPerson(scene, 5);
+  console.log(person)
+  person.mesh.position = new Vector3(30,1,0)
   //person.head.position = new Vector3(1, 25, 1);
   // person.body.position = new Vector3(1, 20, 1);
   function startWalking(person, scene) {
@@ -208,7 +223,9 @@ const loadModel = async (path: string) => {
 
   // create buildings layer for geojson like so:
   // python3 geoMesh.py Gebaeudeflaeche_merged.geojson -s 2 -z -yz  -c
-  const bld = null //await loadModel("buildings.glb");
+  if (useMap) {
+
+  const bld = await loadModel("buildings.glb");
   if (bld) {
     bld.setEnabled(false);
     bld.isVisible = false;
@@ -243,6 +260,7 @@ const loadModel = async (path: string) => {
     buildings.rotation = new Vector3(Math.PI, 0, Math.PI)
     buildings.material = blueMat;
   }
+}
 
 
   // Main loop
