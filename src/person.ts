@@ -120,45 +120,45 @@ function createSkinnedPerson(scene, scale = 1) {
             color: "#FF4444"
         },
         "head": {
-            matrix: new Vector3(0 * scale, 4 * scale, 0 * scale),
+            matrix: new Vector3(0 * scale, 1.4 * scale, 0 * scale),
             size: { x: 0.8, y: 0.8, z: 0.8 },
             parentIdx: 0,
             color: "#44FF44"
 
         },
         "leftArm": {
-            matrix: new Vector3(-0.7 * scale, 2.5 * scale, 0 * scale),
-            size: { x: 0.4, y: 1.2, z: 0.4 },
+            matrix: new Vector3(-1.1 * scale, .5 * scale, 0 * scale),
+            size: { x: 1.1, y: .4, z: 0.4 },
             parentIdx: 0,
             color:  "#FFAA00"
 
         },
         "rightArm": {
-            matrix: new Vector3(0.7 * scale, 2.5 * scale, 0 * scale),
-            size: { x: 0.4, y: 1.2, z: 0.4 },
+            matrix: new Vector3(1.1 * scale, .5 * scale, 0 * scale),
+            size: { x: 1.1, y: .4, z: 0.4 },
             parentIdx: 0,
             color: "#AA00FF"
         },
         "leftLeg": {
-            matrix: new Vector3(-0.3 * scale, 1 * scale, 0 * scale),
+            matrix: new Vector3(-0.3 * scale, -1.6 * scale, 0 * scale),
             size: { x: 0.4, y: 1.5, z: 0.4 },
             parentIdx: 0,
             color: "#AA00FF"
         },
         "rightLeg": {
-            matrix: new Vector3(0.3 * scale, 1 * scale, 0 * scale),
+            matrix: new Vector3(0.3 * scale, -1.6 * scale, 0 * scale),
             size: { x: 0.4, y: 1.5, z: 0.4 },
             parentIdx: 0,
             color: "#AA00FF"
         },
         "leftFoot": {
-            matrix: new Vector3(-.3 * scale, .25 * scale, 0.25 * scale),
+            matrix: new Vector3(0 * scale, -1 * scale, 0.2 * scale),
             size: { x: 0.5, y: 0.2, z: 0.7 },
             parentIdx: 4, // leftLeg
             color: "#AA00FF"
         },
         "rightFoot": {
-            matrix: new Vector3(.3 * scale, .25 * scale, 0.25 * scale),
+            matrix: new Vector3(0 * scale, -1 * scale, 0.2 * scale),
             size: { x: 0.5, y: 0.2, z: 0.7 },
             parentIdx: 5, // rightLeg
             color: "#FF4444"
@@ -194,9 +194,9 @@ function createSkinnedPerson(scene, scale = 1) {
 
     boneMap.forEach((bone, index) => {
         console.log(bone.name, partSpecs[bone.name].color);
-        const mesh = MeshBuilder.CreateBox("part" + index, {
-            height: partSpecs[bone.name].size.x * scale,
-            width: partSpecs[bone.name].size.y * scale,
+        const mesh = MeshBuilder.CreateBox("part_" + bone.name, {
+            width: partSpecs[bone.name].size.x * scale,
+            height: partSpecs[bone.name].size.y * scale,
             depth: partSpecs[bone.name].size.z * scale
         }, scene);
 
