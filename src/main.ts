@@ -213,11 +213,13 @@ const loadModel = async (path: string) => {
   // load person
   const person = createSkinnedPerson(scene, 5);
   console.log(person)
-  person.mesh.position = new Vector3(30,1,0)
+  //person.bones.root.position = new Vector3(30,1,10)
+  person.mesh.position = new Vector3(30,1,10)
+  person.mesh.showBoundingBox = true;
   //person.head.position = new Vector3(1, 25, 1);
   // person.body.position = new Vector3(1, 20, 1);
-  function startWalking(person, scene) {
-    animatePerson(person, scene);
+  function startWalking() {
+    animatePerson(person, scene,engine);
   }
 
 
@@ -288,7 +290,7 @@ const loadModel = async (path: string) => {
         // impulse on dropper 0
         droppers[0].physicsImpostor.applyImpulse(new Vector3(.2, 3, .2), droppers[0].getAbsolutePosition());
         joint.setMotor(3);
-        // startWalking(person, scene);
+        startWalking();
       }
 
       if (inst && inst.position.y < 0.5) {
