@@ -9,7 +9,7 @@ import { Inspector } from '@babylonjs/inspector';
 
 import { createLeafletTexture, drawTiles } from "./map.ts"
 
-import { createPerson, animatePerson } from "./person.ts";
+import { createPerson, createSkinnedPerson, animatePerson } from "./person.ts";
 
 const canvas = document.createElement("canvas");
 canvas.style.width = "100%";
@@ -198,21 +198,21 @@ const loadModel = async (path: string) => {
   joint.setMotor(0);
 
   // load person
-  const person = await createPerson(scene,10);
+  const person = await createSkinnedPerson(scene, 10);
   //person.head.position = new Vector3(1, 25, 1);
-  person.body.position = new Vector3(1, 20, 1);
-    function startWalking(person, scene) {
-      animatePerson(person, scene);
+  // person.body.position = new Vector3(1, 20, 1);
+  function startWalking(person, scene) {
+    animatePerson(person, scene);
   }
-  
+
 
   // create buildings layer for geojson like so:
   // python3 geoMesh.py Gebaeudeflaeche_merged.geojson -s 2 -z -yz  -c
   const bld = null //await loadModel("buildings.glb");
   if (bld) {
-      bld.setEnabled(false);
-      bld.isVisible = false;
-      const buildings = bld.clone("buildings");
+    bld.setEnabled(false);
+    bld.isVisible = false;
+    const buildings = bld.clone("buildings");
 
     const boundingInfo = buildings.getBoundingInfo();
     const boundingBox = boundingInfo.boundingBox;
@@ -233,14 +233,14 @@ const loadModel = async (path: string) => {
     );
     console.log("Ground size", groundSize);
     console.log("Buildings size", buildingsSize);
-    console.log("Scale factor", scaleFactor); 
+    console.log("Scale factor", scaleFactor);
     buildings.scaling = new Vector3(scaleFactor, scaleFactor, scaleFactor);
 
     buildings.setEnabled(true);
     buildings.isVisible = true;
     buildings.position = new Vector3(-1, 10, -82);
     // rotate like ground texture
-    buildings.rotation = new Vector3(Math.PI,0,Math.PI)
+    buildings.rotation = new Vector3(Math.PI, 0, Math.PI)
     buildings.material = blueMat;
   }
 
@@ -270,7 +270,7 @@ const loadModel = async (path: string) => {
         // impulse on dropper 0
         droppers[0].physicsImpostor.applyImpulse(new Vector3(.2, 3, .2), droppers[0].getAbsolutePosition());
         joint.setMotor(3);
-        startWalking(person, scene);
+        // startWalking(person, scene);
       }
 
       if (inst && inst.position.y < 0.5) {

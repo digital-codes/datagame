@@ -1,5 +1,5 @@
 // using ragdolls
-import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3 } from "@babylonjs/core";
+import { Scene, Vector3, MeshBuilder, StandardMaterial, Color3, VertexData, Skeleton, Bone, Matrix } from "@babylonjs/core";
 import { PhysicsImpostor, PhysicsJoint } from "@babylonjs/core/Physics";
 
 function createPerson(scene: Scene, scale:Number = 1) {
@@ -52,8 +52,65 @@ function createPerson(scene: Scene, scale:Number = 1) {
     return ragdoll;
 }
 
+function createSkinnedPerson(scene, scale = 1) {
+    const skeleton = new Skeleton("ragdollSkeleton", "0", scene);
+
+    const root = new Bone("root", skeleton, null, Matrix.Translation(0, 2.5 * scale, 0));
+    const body = new Bone("body", skeleton, root, Matrix.Translation(0, 0, 0));
+    const head = new Bone("head", skeleton, body, Matrix.Translation(0, 1.25 * scale, 0));
+    const leftArm = new Bone("leftArm", skeleton, body, Matrix.Translation(-0.75 * scale, 0.5 * scale, 0));
+    const rightArm = new Bone("rightArm", skeleton, body, Matrix.Translation(0.75 * scale, 0.5 * scale, 0));
+    const leftLeg = new Bone("leftLeg", skeleton, body, Matrix.Translation(-0.3 * scale, -1.5 * scale, 0));
+    const rightLeg = new Bone("rightLeg", skeleton, body, Matrix.Translation(0.3 * scale, -1.5 * scale, 0));
+    const leftFoot = new Bone("leftFoot", skeleton, leftLeg, Matrix.Translation(0, -0.5 * scale, 0.3 * scale));
+    const rightFoot = new Bone("rightFoot", skeleton, rightLeg, Matrix.Translation(0, -0.5 * scale, 0.3 * scale));
+
+    function makePart(size, offsetY, matColor) {
+        const box = MeshBuilder.CreateBox("part", {height: size.y * scale, width: size.x * scale, depth: size.z * scale}, scene);
+        box.position.y = offsetY * scale;
+        const mat = new StandardMaterial("mat", scene);
+        mat.diffuseColor = Color3.FromHexString(matColor);
+        box.material = mat;
+        return box;
+    }
+
+    const parts = [
+        makePart({x: 1, y: 1.5, z: 0.5}, 2.5, "#4444FF"), // body
+        makePart({x: 0.8, y: 0.8, z: 0.8}, 4, "#FF4444"), // head
+        makePart({x: 0.4, y: 1.2, z: 0.4}, 2.5, "#44FF44"), // leftArm
+        makePart({x: 0.4, y: 1.2, z: 0.4}, 2.5, "#44FF44"), // rightArm
+        makePart({x: 0.4, y: 1.5, z: 0.4}, 1, "#FFAA00"), // leftLeg
+        makePart({x: 0.4, y: 1.5, z: 0.4}, 1, "#FFAA00"), // rightLeg
+        makePart({x: 0.5, y: 0.2, z: 0.7}, 0.25, "#AA00FF"), // leftFoot
+        makePart({x: 0.5, y: 0.2, z: 0.7}, 0.25, "#AA00FF")  // rightFoot
+    ];
+
+    const merged = Mesh.MergeMeshes(parts, true, true, undefined, false, true);
+    merged.position.y = 2.5 * scale;
+    merged.skeleton = skeleton;
+
+    return {
+        mesh: merged,
+        skeleton: skeleton,
+        bones: {
+            root,
+            body,
+            head,
+            leftArm,
+            rightArm,
+            leftLeg,
+            rightLeg,
+            leftFoot,
+            rightFoot
+        }
+    };
+}
+
+
+
 function applyTorque(impostor, torqueVec) {
-    impostor.applyTorque(torqueVec);
+    const force = torqueVec.scale(1 / impostor.getObjectCenter().length());
+    impostor.applyForce(force, impostor.getObjectCenter());
 }
 
 function animatePerson(ragdoll, scene:Scene) {
@@ -80,4 +137,4 @@ function animatePerson(ragdoll, scene:Scene) {
 
 
 
-export { createPerson, animatePerson };
+export { createPerson, createSkinnedPerson, animatePerson };
