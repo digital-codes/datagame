@@ -275,7 +275,7 @@ ground.physicsImpostor = new PhysicsImpostor(
     // python3 geoMesh.py Gebaeudeflaeche_merged.geojson -s 2 -z -yz  -c
     if (useMap && useBuildings) {
 
-      const bld = await loadModel("buildings.glb");
+      const bld = await loadModel("buildings.glb",true);
       if (bld) {
         bld.setEnabled(false);
         bld.isVisible = false;
