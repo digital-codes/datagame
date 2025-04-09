@@ -193,6 +193,9 @@ function createSkinnedPerson(scene, scale = 1) {
     const partMeshes = [];
     const parts = {}
 
+    const vertexRanges = []; // track ranges of vertices for bone assignment
+    let vertexOffset = 0;
+
     boneMap.forEach((bone, index) => {
         console.log("Mesh:",bone.name);
         const mesh = MeshBuilder.CreateBox("part_" + bone.name, {
@@ -206,13 +209,19 @@ function createSkinnedPerson(scene, scale = 1) {
         const mat = new StandardMaterial("mat" + index, scene);
         mat.diffuseColor = Color3.FromHexString(partSpecs[bone.name].color);
         mesh.material = mat;
-        //mesh.skeleton = skeleton;
+        mesh.skeleton = skeleton;
 
+        const vertexCount = VertexData.ExtractFromMesh(mesh).positions.length / 3;
+        console.log("Pushing bone:", bone.name, "vertexCount:", vertexCount);
+        vertexRanges.push({ boneName: bone.name, start: vertexOffset, end: vertexOffset + vertexCount });
+        vertexOffset += vertexCount;
+            
         partMeshes.push(mesh);
         parts[bone.name] = mesh;
     });
 
     let finalMesh
+    
     const mergeMeshes = true;
     if (mergeMeshes) {
         const merged = Mesh.MergeMeshes(partMeshes, true, true, undefined, false, true);
@@ -220,15 +229,27 @@ function createSkinnedPerson(scene, scale = 1) {
 
         const vertexData = VertexData.ExtractFromMesh(merged);
         const numVertices = vertexData.positions.length / 3;
+        console.log("numVertices:", numVertices, vertexData);
         const matricesIndices = [];
         const matricesWeights = [];
 
         for (let i = 0; i < numVertices; i++) {
-            const idx = Math.floor(i / (numVertices / boneMap.length));
-            matricesIndices.push(idx, 0, 0, 0);
+            const boneIndex = (() => {
+                for (const range of vertexRanges) {
+                    if (i >= range.start && i < range.end) {
+                        const bone = skeleton.bones.find(b => b.name === range.boneName);
+                        const bIdx = skeleton.bones.indexOf(bone)
+                        console.log("Bone index:", bIdx, "for bone:", bone.name);
+                        return bIdx
+                    }
+                }
+                return 0; // fallback
+            })();
+        
+            matricesIndices.push(boneIndex, 0, 0, 0);
             matricesWeights.push(1, 0, 0, 0);
         }
-
+        
         vertexData.matricesIndices = matricesIndices;
         vertexData.matricesWeights = matricesWeights;
         vertexData.applyToMesh(merged);
@@ -301,8 +322,14 @@ function animatePerson(ragdoll, scene: Scene, engine: Engine) {
 
         ragdoll.bones.leftLeg.setRotation(new Vector3(angle, 0, 0), Space.LOCAL);
         ragdoll.bones.rightLeg.setRotation(new Vector3(-angle, 0, 0), Space.LOCAL);
-        //ragdoll.bones.leftArm.setRotation(new Vector3(0,0, -angle * 0.5), Space.LOCAL);
-        //ragdoll.bones.rightArm.setRotation(new Vector3(-angle * 0.5, 0, 0), Space.LOCAL);
+        ragdoll.bones.leftArm.setRotation(new Vector3(0,0, -angle * 0.5), Space.LOCAL);
+        ragdoll.bones.rightArm.setRotation(new Vector3(-angle * 0.5, 0, 0), Space.LOCAL);
+        ragdoll.bones.head.setRotation(new Vector3(0,-angle * 0.5,0), Space.LOCAL);
+
+        //ragdoll.mesh.position = ragdoll.bones.body.getAbsolutePosition();
+        const dist = Math.abs(Math.cos(time * speed))
+        ragdoll.mesh.position.addInPlace(new Vector3(-dist * .01, 0, dist * .01));
+
     });
 }
 

@@ -215,6 +215,7 @@ const loadModel = async (path: string) => {
   console.log(person)
   //person.bones.root.position = new Vector3(30,1,10)
   person.mesh.position = new Vector3(30,1,10)
+  person.mesh.scaling = new Vector3(2,1,1);
   person.mesh.showBoundingBox = true;
   //person.head.position = new Vector3(1, 25, 1);
   // person.body.position = new Vector3(1, 20, 1);
