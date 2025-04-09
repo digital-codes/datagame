@@ -1,5 +1,5 @@
 // using ragdolls
-import { Scene, Engine, Vector3, Space, MeshBuilder, StandardMaterial, Color3, VertexData, Mesh, Skeleton, Bone, Matrix } from "@babylonjs/core";
+import { Scene, Engine, Vector3, Scalar, Quaternion, Angle, Space, MeshBuilder, StandardMaterial, Color3, VertexData, Mesh, Skeleton, Bone, Matrix } from "@babylonjs/core";
 import { PhysicsImpostor, PhysicsJoint } from "@babylonjs/core/Physics";
 
 function createPerson(scene: Scene) {
@@ -23,14 +23,14 @@ function createPerson(scene: Scene) {
     }
 
     const ragdoll = {
-        head: createBox("head", { x: 0.5 , y: 0.5 , z: 0.5  }, colors.head, new Vector3(0, 3.5 , 0)),
-        body: createBox("body", { x: 1 , y: 1.5 , z: 0.5  }, colors.body, new Vector3(0, 2.5 , 0)),
-        leftArm: createBox("leftArm", { x: 0.4 , y: 1 , z: 0.4  }, colors.arm, new Vector3(-0.8 , 2.5 , 0)),
-        rightArm: createBox("rightArm", { x: 0.4 , y: 1 , z: 0.4  }, colors.arm, new Vector3(0.8 , 2.5 , 0)),
-        leftLeg: createBox("leftLeg", { x: 0.4 , y: 1.2 , z: 0.4  }, colors.leg, new Vector3(-0.3 , 1 , 0)),
-        rightLeg: createBox("rightLeg", { x: 0.4 , y: 1.2 , z: 0.4  }, colors.leg, new Vector3(0.3 , 1 , 0)),
-        leftFoot: createBox("leftFoot", { x: 0.5 , y: 0.2 , z: 0.8  }, colors.foot, new Vector3(-0.3 , 0.3 , 0.3 )),
-        rightFoot: createBox("rightFoot", { x: 0.5 , y: 0.2 , z: 0.8  }, colors.foot, new Vector3(0.3 , 0.3 , 0.3 ))
+        head: createBox("head", { x: 0.5, y: 0.5, z: 0.5 }, colors.head, new Vector3(0, 3.5, 0)),
+        body: createBox("body", { x: 1, y: 1.5, z: 0.5 }, colors.body, new Vector3(0, 2.5, 0)),
+        leftArm: createBox("leftArm", { x: 0.4, y: 1, z: 0.4 }, colors.arm, new Vector3(-0.8, 2.5, 0)),
+        rightArm: createBox("rightArm", { x: 0.4, y: 1, z: 0.4 }, colors.arm, new Vector3(0.8, 2.5, 0)),
+        leftLeg: createBox("leftLeg", { x: 0.4, y: 1.2, z: 0.4 }, colors.leg, new Vector3(-0.3, 1, 0)),
+        rightLeg: createBox("rightLeg", { x: 0.4, y: 1.2, z: 0.4 }, colors.leg, new Vector3(0.3, 1, 0)),
+        leftFoot: createBox("leftFoot", { x: 0.5, y: 0.2, z: 0.8 }, colors.foot, new Vector3(-0.3, 0.3, 0.3)),
+        rightFoot: createBox("rightFoot", { x: 0.5, y: 0.2, z: 0.8 }, colors.foot, new Vector3(0.3, 0.3, 0.3))
     };
 
     function addJoint(box1, box2, pivot1, pivot2) {
@@ -41,13 +41,13 @@ function createPerson(scene: Scene) {
         box1.physicsImpostor.addJoint(box2.physicsImpostor, joint);
     }
 
-    addJoint(ragdoll.head, ragdoll.body, new Vector3(0, -0.25 , 0), new Vector3(0, 0.75 , 0));
-    addJoint(ragdoll.body, ragdoll.leftArm, new Vector3(-0.5 , 0.5 , 0), new Vector3(0, 0.5 , 0));
-    addJoint(ragdoll.body, ragdoll.rightArm, new Vector3(0.5 , 0.5 , 0), new Vector3(0, 0.5 , 0));
-    addJoint(ragdoll.body, ragdoll.leftLeg, new Vector3(-0.3 , -0.75 , 0), new Vector3(0, 0.6 , 0));
-    addJoint(ragdoll.body, ragdoll.rightLeg, new Vector3(0.3 , -0.75 , 0), new Vector3(0, 0.6 , 0));
-    addJoint(ragdoll.leftLeg, ragdoll.leftFoot, new Vector3(0, -0.6 , 0), new Vector3(0, 0.1 , -0.3 ));
-    addJoint(ragdoll.rightLeg, ragdoll.rightFoot, new Vector3(0, -0.6 , 0), new Vector3(0, 0.1 , -0.3 ));
+    addJoint(ragdoll.head, ragdoll.body, new Vector3(0, -0.25, 0), new Vector3(0, 0.75, 0));
+    addJoint(ragdoll.body, ragdoll.leftArm, new Vector3(-0.5, 0.5, 0), new Vector3(0, 0.5, 0));
+    addJoint(ragdoll.body, ragdoll.rightArm, new Vector3(0.5, 0.5, 0), new Vector3(0, 0.5, 0));
+    addJoint(ragdoll.body, ragdoll.leftLeg, new Vector3(-0.3, -0.75, 0), new Vector3(0, 0.6, 0));
+    addJoint(ragdoll.body, ragdoll.rightLeg, new Vector3(0.3, -0.75, 0), new Vector3(0, 0.6, 0));
+    addJoint(ragdoll.leftLeg, ragdoll.leftFoot, new Vector3(0, -0.6, 0), new Vector3(0, 0.1, -0.3));
+    addJoint(ragdoll.rightLeg, ragdoll.rightFoot, new Vector3(0, -0.6, 0), new Vector3(0, 0.1, -0.3));
 
     return ragdoll;
 }
@@ -58,51 +58,51 @@ function createSkinnedPerson(scene) {
 
     const partSpecs = {
         "body": {
-            matrix: new Vector3(0 , 2.5 , 0 ),
+            matrix: new Vector3(0, 2.5, 0),
             size: { x: 1, y: 1.5, z: 0.5 },
             parent: null,
             color: "#44FF44"
         },
         "head": {
-            matrix: new Vector3(0 , 1.4 , 0 ),
+            matrix: new Vector3(0, 1.4, 0),
             size: { x: 0.8, y: 0.8, z: 0.8 },
             parent: "body",
             color: "#44FF44"
 
         },
         "leftArm": {
-            matrix: new Vector3(-1.1 , .5 , 0 ),
+            matrix: new Vector3(-1.1, .5, 0),
             size: { x: 1.1, y: .4, z: 0.4 },
             parent: "body",
             color: "#FFAA00"
 
         },
         "rightArm": {
-            matrix: new Vector3(1.1 , .5 , 0 ),
+            matrix: new Vector3(1.1, .5, 0),
             size: { x: 1.1, y: .4, z: 0.4 },
             parent: "body",
             color: "#AA00FF"
         },
         "leftLeg": {
-            matrix: new Vector3(-0.3 , -1.6 , 0 ),
+            matrix: new Vector3(-0.3, -1.6, 0),
             size: { x: 0.4, y: 1.5, z: 0.4 },
             parent: "body",
             color: "#AA00FF"
         },
         "rightLeg": {
-            matrix: new Vector3(0.3 , -1.6 , 0 ),
+            matrix: new Vector3(0.3, -1.6, 0),
             size: { x: 0.4, y: 1.5, z: 0.4 },
             parent: "body",
             color: "#AA00FF"
         },
         "leftFoot": {
-            matrix: new Vector3(0 , -1 , 0.2 ),
+            matrix: new Vector3(0, -1, 0.2),
             size: { x: 0.5, y: 0.2, z: 0.7 },
             parent: "leftLeg",
             color: "#AA00FF"
         },
         "rightFoot": {
-            matrix: new Vector3(0 , -1 , 0.2 ),
+            matrix: new Vector3(0, -1, 0.2),
             size: { x: 0.5, y: 0.2, z: 0.7 },
             parent: "rightLeg",
             color: "#FF4444"
@@ -133,9 +133,9 @@ function createSkinnedPerson(scene) {
     boneMap.forEach((bone, index) => {
         // console.log("Mesh:",bone.name);
         const mesh = MeshBuilder.CreateBox("part_" + bone.name, {
-            width: partSpecs[bone.name].size.x ,
-            height: partSpecs[bone.name].size.y ,
-            depth: partSpecs[bone.name].size.z 
+            width: partSpecs[bone.name].size.x,
+            height: partSpecs[bone.name].size.y,
+            depth: partSpecs[bone.name].size.z
         }, scene);
 
         mesh.position = bone.getAbsolutePosition();
@@ -149,7 +149,7 @@ function createSkinnedPerson(scene) {
         // console.log("Pushing bone:", bone.name, "vertexCount:", vertexCount);
         vertexRanges.push({ boneName: bone.name, start: vertexOffset, end: vertexOffset + vertexCount });
         vertexOffset += vertexCount;
-            
+
         partMeshes.push(mesh);
     });
 
@@ -174,11 +174,11 @@ function createSkinnedPerson(scene) {
             }
             return 0; // fallback
         })();
-    
+
         matricesIndices.push(boneIndex, 0, 0, 0);
         matricesWeights.push(1, 0, 0, 0);
     }
-    
+
     vertexData.matricesIndices = matricesIndices;
     vertexData.matricesWeights = matricesWeights;
     vertexData.applyToMesh(merged);
@@ -209,8 +209,8 @@ function createSkinnedPerson(scene) {
         //console.log(`onCollideEvent: self velocity: ${self.getLinearVelocity()}, other velocity: ${other.getLinearVelocity()}`);
         //const selfPosition = self.object?.getAbsolutePosition();
         //console.log(`onCollideEvent: self position:  ${selfPosition}`);
-      };
-  
+    };
+
 
     // push root before retuning
     boneMap.unshift(root)
@@ -218,7 +218,7 @@ function createSkinnedPerson(scene) {
     const bones = boneMap.reduce((acc, bone) => {
         acc[bone.name] = bone;
         return acc;
-    }, {});  
+    }, {});
     console.log("bones:", bones);
 
 
@@ -242,14 +242,86 @@ function animatePerson(ragdoll, scene: Scene, engine: Engine) {
 
         ragdoll.bones.leftLeg.setRotation(new Vector3(angle, 0, 0), Space.LOCAL);
         ragdoll.bones.rightLeg.setRotation(new Vector3(-angle, 0, 0), Space.LOCAL);
-        ragdoll.bones.leftArm.setRotation(new Vector3(0,0, -angle * 0.5), Space.LOCAL);
+        ragdoll.bones.leftArm.setRotation(new Vector3(0, 0, -angle * 0.5), Space.LOCAL);
         ragdoll.bones.rightArm.setRotation(new Vector3(-angle * 0.5, 0, 0), Space.LOCAL);
-        ragdoll.bones.head.setRotation(new Vector3(0,-angle * 0.5,0), Space.LOCAL);
+        ragdoll.bones.head.setRotation(new Vector3(0, -angle * 0.5, 0), Space.LOCAL);
 
         //ragdoll.mesh.position = ragdoll.bones.body.getAbsolutePosition();
         const dist = Math.abs(Math.cos(time * speed))
         if (speed != 0) {
             ragdoll.mesh.position.addInPlace(new Vector3(-dist * .01, 0, dist * .01));
+        }
+
+
+        // Local axes
+        const localY = Vector3.TransformNormal(Vector3.Up(), ragdoll.mesh.getWorldMatrix()).normalize();
+        const localZ = Vector3.TransformNormal(Vector3.Forward(), ragdoll.mesh.getWorldMatrix()).normalize();
+        const globalY = Vector3.Up();
+
+        // How off is local Y from world Y
+        const dotY = Vector3.Dot(localY, globalY);
+        const angleRad = Math.acos(dotY);
+        const angleDeg = Angle.FromRadians(angleRad).degrees();
+        const tiltAmount = Math.abs(angleDeg);
+
+        // Only apply impulse if there's significant tilt
+        if (tiltAmount > 10 && tiltAmount < 85) {
+            console.log("Tilted!", tiltAmount);
+            // Strength grows with tilt
+            const strength = Scalar.Clamp((tiltAmount - 10) / 75, 0, 1);
+            const basePower = 0.1 + 0.1 * strength;
+
+            // Direction to push = opposite of current lean (local Y)
+            // But reduce Z drift using localZ — blends stabilization and upright
+            const correctionDir = localY.scale(-1).add(localZ.scale(-0.5)).normalize();
+            const impulse = correctionDir.scale(basePower);
+            console.log("Impulse:", impulse);
+            ragdoll.mesh.physicsImpostor.applyImpulse(impulse, ragdoll.mesh.getAbsolutePosition());
+        }
+
+
+        /*
+        const localY = Vector3.TransformNormal(Vector3.Up(), ragdoll.mesh.getWorldMatrix()).normalize();
+        const angleRad = Math.acos(Vector3.Dot(localY, Vector3.Up()));
+        const angleDeg = Angle.FromRadians(angleRad).degrees();
+
+        if (Math.abs(angleDeg) > 10 && Math.abs(angleDeg) < 85) {
+            console.log("Stabilizing!",angleDeg);
+            const correction = new Vector3(0, angleDeg > 0 ? -.2 : 0.2, 0);
+            ragdoll.mesh.physicsImpostor.applyImpulse(correction, ragdoll.mesh.getAbsolutePosition());
+        }
+        */
+
+        if (Math.abs(angleDeg) >= 85 && !scene.state.person.fallen) {
+            console.log("Fallen!");
+            scene.state.person.fallen = true;
+            scene.state.person.recovering = false;
+        }
+
+        if (scene.state.person.fallen && Math.abs(angleDeg) < 10 && !scene.state.person.recovering) {
+            console.log("Recovering!");
+            scene.state.person.recovering = true;
+            ragdoll.mesh.physicsImpostor.setLinearVelocity(Vector3.Zero());
+            ragdoll.mesh.physicsImpostor.setAngularVelocity(Vector3.Zero());
+            ragdoll.mesh.physicsImpostor.setDeltaRotation(Quaternion.Identity());
+            ragdoll.mesh.physicsImpostor.setDeltaPosition(ragdoll.mesh.getAbsolutePosition().add(new Vector3(0, 1, 0)));
+        }
+
+        if (!scene.state.person.fallen) {
+            ragdoll.bones.leftLeg.setRotation(new Vector3(angle, 0, 0), Space.LOCAL);
+            ragdoll.bones.rightLeg.setRotation(new Vector3(-angle, 0, 0), Space.LOCAL);
+            ragdoll.bones.leftArm.setRotation(new Vector3(-angle * 0.5, 0, 0), Space.LOCAL);
+            ragdoll.bones.rightArm.setRotation(new Vector3(angle * 0.5, 0, 0), Space.LOCAL);
+            ragdoll.bones.leftFoot.setRotation(new Vector3(Math.sin(time * speed + Math.PI) * 0.3, 0, 0), Space.LOCAL);
+            ragdoll.bones.rightFoot.setRotation(new Vector3(Math.sin(time * speed) * 0.3, 0, 0), Space.LOCAL);
+
+            const velocity = ragdoll.mesh.physicsImpostor.getLinearVelocity();
+            const isGrounded = Math.abs(velocity.y) < 0.1;
+
+            if (isGrounded) {
+                const walkImpulse = new Vector3(0, 0, -0.01);
+                ragdoll.mesh.physicsImpostor.applyImpulse(walkImpulse, ragdoll.mesh.getAbsolutePosition());
+            }
         }
 
         /*
