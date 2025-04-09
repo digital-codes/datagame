@@ -2,7 +2,7 @@
 import { Scene, Engine, Vector3, Space, MeshBuilder, StandardMaterial, Color3, VertexData, Mesh, Skeleton, Bone, Matrix } from "@babylonjs/core";
 import { PhysicsImpostor, PhysicsJoint } from "@babylonjs/core/Physics";
 
-function createPerson(scene: Scene, scale: Number = 1) {
+function createPerson(scene: Scene) {
     const colors = {
         head: "#FF0000",
         body: "#0000FF",
@@ -23,14 +23,14 @@ function createPerson(scene: Scene, scale: Number = 1) {
     }
 
     const ragdoll = {
-        head: createBox("head", { x: 0.5 * scale, y: 0.5 * scale, z: 0.5 * scale }, colors.head, new Vector3(0, 3.5 * scale, 0)),
-        body: createBox("body", { x: 1 * scale, y: 1.5 * scale, z: 0.5 * scale }, colors.body, new Vector3(0, 2.5 * scale, 0)),
-        leftArm: createBox("leftArm", { x: 0.4 * scale, y: 1 * scale, z: 0.4 * scale }, colors.arm, new Vector3(-0.8 * scale, 2.5 * scale, 0)),
-        rightArm: createBox("rightArm", { x: 0.4 * scale, y: 1 * scale, z: 0.4 * scale }, colors.arm, new Vector3(0.8 * scale, 2.5 * scale, 0)),
-        leftLeg: createBox("leftLeg", { x: 0.4 * scale, y: 1.2 * scale, z: 0.4 * scale }, colors.leg, new Vector3(-0.3 * scale, 1 * scale, 0)),
-        rightLeg: createBox("rightLeg", { x: 0.4 * scale, y: 1.2 * scale, z: 0.4 * scale }, colors.leg, new Vector3(0.3 * scale, 1 * scale, 0)),
-        leftFoot: createBox("leftFoot", { x: 0.5 * scale, y: 0.2 * scale, z: 0.8 * scale }, colors.foot, new Vector3(-0.3 * scale, 0.3 * scale, 0.3 * scale)),
-        rightFoot: createBox("rightFoot", { x: 0.5 * scale, y: 0.2 * scale, z: 0.8 * scale }, colors.foot, new Vector3(0.3 * scale, 0.3 * scale, 0.3 * scale))
+        head: createBox("head", { x: 0.5 , y: 0.5 , z: 0.5  }, colors.head, new Vector3(0, 3.5 , 0)),
+        body: createBox("body", { x: 1 , y: 1.5 , z: 0.5  }, colors.body, new Vector3(0, 2.5 , 0)),
+        leftArm: createBox("leftArm", { x: 0.4 , y: 1 , z: 0.4  }, colors.arm, new Vector3(-0.8 , 2.5 , 0)),
+        rightArm: createBox("rightArm", { x: 0.4 , y: 1 , z: 0.4  }, colors.arm, new Vector3(0.8 , 2.5 , 0)),
+        leftLeg: createBox("leftLeg", { x: 0.4 , y: 1.2 , z: 0.4  }, colors.leg, new Vector3(-0.3 , 1 , 0)),
+        rightLeg: createBox("rightLeg", { x: 0.4 , y: 1.2 , z: 0.4  }, colors.leg, new Vector3(0.3 , 1 , 0)),
+        leftFoot: createBox("leftFoot", { x: 0.5 , y: 0.2 , z: 0.8  }, colors.foot, new Vector3(-0.3 , 0.3 , 0.3 )),
+        rightFoot: createBox("rightFoot", { x: 0.5 , y: 0.2 , z: 0.8  }, colors.foot, new Vector3(0.3 , 0.3 , 0.3 ))
     };
 
     function addJoint(box1, box2, pivot1, pivot2) {
@@ -41,36 +41,36 @@ function createPerson(scene: Scene, scale: Number = 1) {
         box1.physicsImpostor.addJoint(box2.physicsImpostor, joint);
     }
 
-    addJoint(ragdoll.head, ragdoll.body, new Vector3(0, -0.25 * scale, 0), new Vector3(0, 0.75 * scale, 0));
-    addJoint(ragdoll.body, ragdoll.leftArm, new Vector3(-0.5 * scale, 0.5 * scale, 0), new Vector3(0, 0.5 * scale, 0));
-    addJoint(ragdoll.body, ragdoll.rightArm, new Vector3(0.5 * scale, 0.5 * scale, 0), new Vector3(0, 0.5 * scale, 0));
-    addJoint(ragdoll.body, ragdoll.leftLeg, new Vector3(-0.3 * scale, -0.75 * scale, 0), new Vector3(0, 0.6 * scale, 0));
-    addJoint(ragdoll.body, ragdoll.rightLeg, new Vector3(0.3 * scale, -0.75 * scale, 0), new Vector3(0, 0.6 * scale, 0));
-    addJoint(ragdoll.leftLeg, ragdoll.leftFoot, new Vector3(0, -0.6 * scale, 0), new Vector3(0, 0.1 * scale, -0.3 * scale));
-    addJoint(ragdoll.rightLeg, ragdoll.rightFoot, new Vector3(0, -0.6 * scale, 0), new Vector3(0, 0.1 * scale, -0.3 * scale));
+    addJoint(ragdoll.head, ragdoll.body, new Vector3(0, -0.25 , 0), new Vector3(0, 0.75 , 0));
+    addJoint(ragdoll.body, ragdoll.leftArm, new Vector3(-0.5 , 0.5 , 0), new Vector3(0, 0.5 , 0));
+    addJoint(ragdoll.body, ragdoll.rightArm, new Vector3(0.5 , 0.5 , 0), new Vector3(0, 0.5 , 0));
+    addJoint(ragdoll.body, ragdoll.leftLeg, new Vector3(-0.3 , -0.75 , 0), new Vector3(0, 0.6 , 0));
+    addJoint(ragdoll.body, ragdoll.rightLeg, new Vector3(0.3 , -0.75 , 0), new Vector3(0, 0.6 , 0));
+    addJoint(ragdoll.leftLeg, ragdoll.leftFoot, new Vector3(0, -0.6 , 0), new Vector3(0, 0.1 , -0.3 ));
+    addJoint(ragdoll.rightLeg, ragdoll.rightFoot, new Vector3(0, -0.6 , 0), new Vector3(0, 0.1 , -0.3 ));
 
     return ragdoll;
 }
 
-function createSkinnedPerson1(scene, scale = 1) {
+function createSkinnedPerson1(scene) {
     const skeleton = new Skeleton("ragdollSkeleton", "0", scene);
 
 
-    const root = new Bone("root", skeleton, null, Matrix.Translation(0, 2.5 * scale, 0));
+    const root = new Bone("root", skeleton, null, Matrix.Translation(0, 2.5 , 0));
     const body = new Bone("body", skeleton, root, Matrix.Translation(0, 0, 0));
-    const head = new Bone("head", skeleton, body, Matrix.Translation(0, 1.25 * scale, 0));
-    const leftArm = new Bone("leftArm", skeleton, body, Matrix.Translation(-1.75 * scale, 0.5 * scale, 0));
-    const rightArm = new Bone("rightArm", skeleton, body, Matrix.Translation(1.75 * scale, 0.5 * scale, 0));
-    const leftLeg = new Bone("leftLeg", skeleton, body, Matrix.Translation(-0.3 * scale, -1.5 * scale, 0));
-    const rightLeg = new Bone("rightLeg", skeleton, body, Matrix.Translation(0.3 * scale, -1.5 * scale, 0));
-    const leftFoot = new Bone("leftFoot", skeleton, leftLeg, Matrix.Translation(0, -0.5 * scale, 0.3 * scale));
-    const rightFoot = new Bone("rightFoot", skeleton, rightLeg, Matrix.Translation(0, -0.5 * scale, 0.3 * scale));
+    const head = new Bone("head", skeleton, body, Matrix.Translation(0, 1.25 , 0));
+    const leftArm = new Bone("leftArm", skeleton, body, Matrix.Translation(-1.75 , 0.5 , 0));
+    const rightArm = new Bone("rightArm", skeleton, body, Matrix.Translation(1.75 , 0.5 , 0));
+    const leftLeg = new Bone("leftLeg", skeleton, body, Matrix.Translation(-0.3 , -1.5 , 0));
+    const rightLeg = new Bone("rightLeg", skeleton, body, Matrix.Translation(0.3 , -1.5 , 0));
+    const leftFoot = new Bone("leftFoot", skeleton, leftLeg, Matrix.Translation(0, -0.5 , 0.3 ));
+    const rightFoot = new Bone("rightFoot", skeleton, rightLeg, Matrix.Translation(0, -0.5 , 0.3 ));
 
     function makePart(name = "part", size, offset, matColor) {
-        const box = MeshBuilder.CreateBox(name, { height: size.y * scale, width: size.x * scale, depth: size.z * scale }, scene);
-        box.position.x += offset.x * scale;
-        box.position.y += offset.y * scale;
-        box.position.z += offset.z * scale;
+        const box = MeshBuilder.CreateBox(name, { height: size.y , width: size.x , depth: size.z  }, scene);
+        box.position.x += offset.x ;
+        box.position.y += offset.y ;
+        box.position.z += offset.z ;
         const mat = new StandardMaterial("mat", scene);
         mat.diffuseColor = Color3.FromHexString(matColor);
         box.material = mat;
@@ -89,7 +89,7 @@ function createSkinnedPerson1(scene, scale = 1) {
     ];
 
     const merged = Mesh.MergeMeshes(parts, true, true, undefined, false, true);
-    // merged.position.y = 2.5 * scale;
+    // merged.position.y = 2.5 ;
     merged.skeleton = skeleton;
 
     return {
@@ -109,56 +109,56 @@ function createSkinnedPerson1(scene, scale = 1) {
     };
 }
 
-function createSkinnedPerson(scene, scale = 1) {
+function createSkinnedPerson(scene) {
     const skeleton = new Skeleton("ragdollSkeleton", "0", scene);
 
     const partSpecs = {
         "body": {
-            matrix: new Vector3(0 * scale, 2.5 * scale, 0 * scale),
+            matrix: new Vector3(0 , 2.5 , 0 ),
             size: { x: 1, y: 1.5, z: 0.5 },
             parent: null,
             color: "#44FF44"
         },
         "head": {
-            matrix: new Vector3(0 * scale, 1.4 * scale, 0 * scale),
+            matrix: new Vector3(0 , 1.4 , 0 ),
             size: { x: 0.8, y: 0.8, z: 0.8 },
             parent: "body",
             color: "#44FF44"
 
         },
         "leftArm": {
-            matrix: new Vector3(-1.1 * scale, .5 * scale, 0 * scale),
+            matrix: new Vector3(-1.1 , .5 , 0 ),
             size: { x: 1.1, y: .4, z: 0.4 },
             parent: "body",
             color: "#FFAA00"
 
         },
         "rightArm": {
-            matrix: new Vector3(1.1 * scale, .5 * scale, 0 * scale),
+            matrix: new Vector3(1.1 , .5 , 0 ),
             size: { x: 1.1, y: .4, z: 0.4 },
             parent: "body",
             color: "#AA00FF"
         },
         "leftLeg": {
-            matrix: new Vector3(-0.3 * scale, -1.6 * scale, 0 * scale),
+            matrix: new Vector3(-0.3 , -1.6 , 0 ),
             size: { x: 0.4, y: 1.5, z: 0.4 },
             parent: "body",
             color: "#AA00FF"
         },
         "rightLeg": {
-            matrix: new Vector3(0.3 * scale, -1.6 * scale, 0 * scale),
+            matrix: new Vector3(0.3 , -1.6 , 0 ),
             size: { x: 0.4, y: 1.5, z: 0.4 },
             parent: "body",
             color: "#AA00FF"
         },
         "leftFoot": {
-            matrix: new Vector3(0 * scale, -1 * scale, 0.2 * scale),
+            matrix: new Vector3(0 , -1 , 0.2 ),
             size: { x: 0.5, y: 0.2, z: 0.7 },
             parent: "leftLeg",
             color: "#AA00FF"
         },
         "rightFoot": {
-            matrix: new Vector3(0 * scale, -1 * scale, 0.2 * scale),
+            matrix: new Vector3(0 , -1 , 0.2 ),
             size: { x: 0.5, y: 0.2, z: 0.7 },
             parent: "rightLeg",
             color: "#FF4444"
@@ -199,9 +199,9 @@ function createSkinnedPerson(scene, scale = 1) {
     boneMap.forEach((bone, index) => {
         console.log("Mesh:",bone.name);
         const mesh = MeshBuilder.CreateBox("part_" + bone.name, {
-            width: partSpecs[bone.name].size.x * scale,
-            height: partSpecs[bone.name].size.y * scale,
-            depth: partSpecs[bone.name].size.z * scale
+            width: partSpecs[bone.name].size.x ,
+            height: partSpecs[bone.name].size.y ,
+            depth: partSpecs[bone.name].size.z 
         }, scene);
 
         mesh.position = bone.getAbsolutePosition();

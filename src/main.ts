@@ -211,11 +211,11 @@ const loadModel = async (path: string) => {
   joint.setMotor(0);
 
   // load person
-  const person = createSkinnedPerson(scene, 5);
+  const person = createSkinnedPerson(scene);
   console.log(person)
   //person.bones.root.position = new Vector3(30,1,10)
   person.mesh.position = new Vector3(30,1,10)
-  person.mesh.scaling = new Vector3(2,1,1);
+  person.mesh.scaling = new Vector3(5,4,6);
   person.mesh.showBoundingBox = true;
   //person.head.position = new Vector3(1, 25, 1);
   // person.body.position = new Vector3(1, 20, 1);
