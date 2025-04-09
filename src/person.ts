@@ -269,7 +269,7 @@ function animatePerson(ragdoll, scene: Scene, engine: Engine) {
             console.log("Tilted!", tiltAmount);
             // Strength grows with tilt
             const strength = Scalar.Clamp((tiltAmount - 10) / 75, 0, 1);
-            const basePower = 0.1 + 0.1 * strength;
+            const basePower = 0.2 + 0.1 * strength;
 
             // Direction to push = opposite of current lean (local Y)
             // But reduce Z drift using localZ — blends stabilization and upright
