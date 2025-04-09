@@ -21,7 +21,16 @@ document.body.appendChild(canvas);
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
 
-const useMap = false
+scene.state = {
+  person: {
+    isGrounded: false,
+    isWalking: false,
+    speed: 4,
+    angle: .5
+  }
+}
+
+const useMap = true
 const mapDebug = false
 
 Inspector.Show(scene, {});
@@ -214,9 +223,14 @@ const loadModel = async (path: string) => {
   const person = createSkinnedPerson(scene);
   console.log(person)
   //person.bones.root.position = new Vector3(30,1,10)
-  person.mesh.position = new Vector3(30,1,10)
-  person.mesh.scaling = new Vector3(5,4,6);
+  person.mesh.position = new Vector3(30,5,10)
+  const personScale = new Vector3(5,5,5);
+  person.mesh.scaling = personScale;
+  person.mesh.physicsImpostor.forceUpdate(); // apply new size
+  //person.mesh.scaling = new Vector3(5,4,6);
   person.mesh.showBoundingBox = true;
+  //person.mesh.material.wireframe = true;
+
   //person.head.position = new Vector3(1, 25, 1);
   // person.body.position = new Vector3(1, 20, 1);
   function startWalking() {
@@ -226,7 +240,7 @@ const loadModel = async (path: string) => {
 
   // create buildings layer for geojson like so:
   // python3 geoMesh.py Gebaeudeflaeche_merged.geojson -s 2 -z -yz  -c
-  if (useMap) {
+  if (false && useMap) {
 
   const bld = await loadModel("buildings.glb");
   if (bld) {
