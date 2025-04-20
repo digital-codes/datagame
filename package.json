@@ -20,6 +20,7 @@
     "@babylonjs/materials": "^8.1.1",
     "@babylonjs/serializers": "^8.1.1",
     "babylonjs": "^8.1.1",
-    "cannon-es": "^0.20.0"
+    "cannon-es": "^0.20.0",
+    "proj4": "^2.15.0"
   }
 }

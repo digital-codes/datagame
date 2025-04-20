@@ -32,7 +32,7 @@ scene.state = {
 
 const useMap = true
 const useBuildings = false
-const mapDebug = false
+const mapDebug = true
 
 Inspector.Show(scene, {});
 
