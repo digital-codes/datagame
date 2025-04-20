@@ -34,7 +34,7 @@ const useMap = true
 const useBuildings = false
 const mapDebug = true
 
-Inspector.Show(scene, {});
+// Inspector.Show(scene, {});
 
 // not sure if this is needed
 window.CANNON = CANNON;
@@ -102,8 +102,11 @@ if (useMap) {
   groundMat.diffuseTexture = gtx.texture;
   groundMat.specularColor = new Color3(0.5, 0.5, 0.5); // Adjust reflectivity
   groundMat.specularPower = 100; // Control the sharpness of the reflection
-  const groundScale = groundSize / gtx.dims[2];
-  console.log("groundScale", groundScale);
+  const groundScale = groundSize / gtx.dims[2]; // canvas width in pixels
+  console.log("groundScale", groundScale,groundSize,gtx.dims[2]);
+  const pxSize = gtx.dims[3];
+  const unitSize = pxSize / groundScale
+  console.log("ground px / unit size [m]", pxSize, unitSize);
   // compute offset of target to center
   const tileSize = 256
   const offsetX = -(gtx.dims[0] - tileSize / 2) * groundScale

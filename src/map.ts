@@ -1,6 +1,8 @@
 import proj4 from "proj4";
 
 const USE_UTM32 = true
+// Include proj4 (from CDN or your build system)
+proj4.defs("EPSG:25832", "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs");
 
 import {
   MeshBuilder,
@@ -12,16 +14,20 @@ import {
   Mesh,
 } from "@babylonjs/core";
 
-// Convert lat/lon to tile numbers at a given zoom
-function latLonToTileXY_int(lat: number, lon: number, zoom: number): { x: number; y: number } {
-  const latRad = (lat * Math.PI) / 180;
-  const n = Math.pow(2, zoom);
-  const x = Math.floor((lon + 180) / 360 * n);
-  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
-  return { x, y };
+function latLonToTileXY(lat: number, lon: number, zoom: number): { x: number; y: number, pixelSize: number } {
+  if (USE_UTM32) {
+    // Convert lat/lon to UTM32 tile coordinates
+    const {x,y, pixelSize} = latLonToTileXYutm32(lat, lon, zoom)
+    return { x, y, pixelSize };
+  } else {
+    // Convert lat/lon to WGS84 tile coordinates
+    const {x,y} = latLonToTileXYwgs84(lat, lon, zoom)
+    return { x, y, pixelSize: 1 };
+  }
+
 }
 
-function latLonToTileXY(lat: number, lon: number, zoom: number): { x: number; y: number } {
+function latLonToTileXYwgs84(lat: number, lon: number, zoom: number): { x: number; y: number } {
   const latRad = (lat * Math.PI) / 180;
   const n = Math.pow(2, zoom);
   const x = (lon + 180) / 360 * n;
@@ -29,11 +35,7 @@ function latLonToTileXY(lat: number, lon: number, zoom: number): { x: number; y:
   return { x, y }; // float values now
 }
 
-
-// Include proj4 (from CDN or your build system)
-proj4.defs("EPSG:25832", "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs");
-
-function getTile25832(lat: number, lon: number, zoom: number) {
+function latLonToTileXYutm32(lat: number, lon: number, zoom: number) {
   // 1. Convert lat/lon to EPSG:25832
   const [X, Y] = proj4("EPSG:4326", "EPSG:25832", [lon, lat]);
 
@@ -68,7 +70,7 @@ Bearbeiten
   const originX = -46133.17;
   const originY = 6301219.54
 
-  
+
   // 3. Pixel sizes per zoom level (in meters)
   const pixelSizes = [
     4891.96981025128, 2445.98490512564, 1222.99245256282,
@@ -84,7 +86,7 @@ Bearbeiten
 
   const x = (X - originX) / tileSpan
   const y = (originY - Y) / tileSpan; // Invert Y for tile coordinates
-  console.log("UTM tile:", x, y)
+  //console.log("UTM tile:", x, y)
   return { x, y, pixelSize }
 }
 
@@ -99,7 +101,7 @@ function getTileUrl(x: number, y: number, z: number): string {
   } else {
     url = `https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/DE_EPSG_25832_ADV/${z.toString().padStart(2, "0")}/${y}/${x}.png`
   }
-  console.log(x, y, z, url)
+  // console.log(x, y, z, url)
   return url
 }
 
@@ -140,7 +142,6 @@ async function createLeafletTexture(
   const tileSize = 256;
   const canvasSize = (tileCount * 2 + 1) * tileSize;
 
-  zoom = USE_UTM32 ? zoom - 5 : zoom
 
   const canvas = document.createElement("canvas");
   canvas.width = canvasSize;
@@ -151,8 +152,9 @@ async function createLeafletTexture(
   const startX = centerX - Math.floor(tileCount / 2);
   const startY = centerY - Math.floor(tileCount / 2);
   */
-  const { x: tileXExact, y: tileYExact } = !USE_UTM32 ? latLonToTileXY(centerLat, centerLon, zoom) : getTile25832(centerLat, centerLon, zoom);
-  console.log("Tile:", tileXExact, tileYExact)
+  zoom = USE_UTM32 ? zoom - 5 : zoom
+  const { x: tileXExact, y: tileYExact, pixelSize: pxSize } = latLonToTileXY(centerLat, centerLon, zoom)
+  //console.log("Tile:", tileXExact, tileYExact, pxSize)
 
   // Integer tile range
   const startX = Math.floor(tileXExact);
@@ -168,7 +170,7 @@ async function createLeafletTexture(
 
   const texture = new DynamicTexture("leafletMap", canvas, scene, false);
   texture.update()
-  return { texture: texture as DynamicTexture, dims: [offsetX, offsetY, canvasSize] };
+  return { texture: texture as DynamicTexture, dims: [offsetX, offsetY, canvasSize, pxSize] };
 }
 
 // Main function to create the leaflet ground
@@ -193,8 +195,10 @@ async function createLeafletGround(
   const startX = centerX - Math.floor(tileCount / 2);
   const startY = centerY - Math.floor(tileCount / 2);
   */
-  const { x: tileXExact, y: tileYExact } = !USE_UTM32 ? latLonToTileXY(centerLat, centerLon, zoom) : getTile25832(centerLat, centerLon, zoom);
-  // console.log(tileXExact, tileYExact)
+
+  zoom = USE_UTM32 ? zoom - 5 : zoom
+  const { x: tileXExact, y: tileYExact, pixelSize: pxSize } = latLonToTileXY(centerLat, centerLon, zoom)
+  // console.log("Tile:", tileXExact, tileYExact, pxSize)
 
   // Integer tile range
   const startX = Math.round(tileXExact);
