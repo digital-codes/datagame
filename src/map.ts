@@ -67,6 +67,7 @@ Bearbeiten
   // from specs
   const originX = -46133.17;
   const originY = 6301219.54
+
   
   // 3. Pixel sizes per zoom level (in meters)
   const pixelSizes = [
@@ -84,7 +85,7 @@ Bearbeiten
   const x = (X - originX) / tileSpan
   const y = (originY - Y) / tileSpan; // Invert Y for tile coordinates
   console.log("UTM tile:", x, y)
-  return { x, y }
+  return { x, y, pixelSize }
 }
 
 
