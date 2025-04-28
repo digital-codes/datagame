@@ -2,7 +2,28 @@
 import { Scene, Engine, Vector3, Scalar, Quaternion, Angle, Space, MeshBuilder, StandardMaterial, Color3, VertexData, Mesh, Skeleton, Bone, Matrix } from "@babylonjs/core";
 import { PhysicsImpostor, PhysicsJoint } from "@babylonjs/core/Physics";
 
-function createPerson(scene: Scene) {
+interface CustomScene extends Scene {
+  state: {
+    person: {
+      isGrounded: boolean;
+      isWalking: boolean;
+      speed: number;
+      angle: number;
+      fallen:boolean ;
+      recovering:boolean;
+    };
+  };
+}
+
+
+interface SkinnedPerson {
+    mesh: Mesh;
+    skeleton: Skeleton;
+    bones: Record<string, Bone>;
+    velocity: Vector3;
+}
+
+function createPerson(scene: CustomScene) {
     const colors = {
         head: "#FF0000",
         body: "#0000FF",
@@ -11,7 +32,7 @@ function createPerson(scene: Scene) {
         foot: "#800080"
     };
 
-    function createBox(name, size, color, position) {
+    function createBox(name: string, size: { x: number; y: number; z: number }, color: string, position: Vector3) {
         const mat = new StandardMaterial(name + "Mat", scene);
         mat.diffuseColor = Color3.FromHexString(color);
 
@@ -33,12 +54,12 @@ function createPerson(scene: Scene) {
         rightFoot: createBox("rightFoot", { x: 0.5, y: 0.2, z: 0.8 }, colors.foot, new Vector3(0.3, 0.3, 0.3))
     };
 
-    function addJoint(box1, box2, pivot1, pivot2) {
+    function addJoint(box1:Mesh, box2:Mesh, pivot1:Vector3, pivot2:Vector3) {
         const joint = new PhysicsJoint(PhysicsJoint.BallAndSocketJoint, {
             mainPivot: pivot1,
             connectedPivot: pivot2
         });
-        box1.physicsImpostor.addJoint(box2.physicsImpostor, joint);
+        box1.physicsImpostor!.addJoint(box2.physicsImpostor!, joint);
     }
 
     addJoint(ragdoll.head, ragdoll.body, new Vector3(0, -0.25, 0), new Vector3(0, 0.75, 0));
@@ -53,7 +74,7 @@ function createPerson(scene: Scene) {
 }
 
 
-function createSkinnedPerson(scene) {
+function createSkinnedPerson(scene: CustomScene) {
     const skeleton = new Skeleton("ragdollSkeleton", "0", scene);
 
     const partSpecs = {
@@ -114,38 +135,40 @@ function createSkinnedPerson(scene) {
     // create bones from partspecs
     const boneMap = []
     for (const key in partSpecs) {
-        const parent: Bone = boneMap[Object.keys(partSpecs).indexOf(partSpecs[key].parent)] || root;
+        const parentName = partSpecs[key as keyof typeof partSpecs].parent;
+        const parent: Bone = parentName ? boneMap[Object.keys(partSpecs).indexOf(parentName)] : root;
         // console.log("Bone:",key, parent.name);
         const b: Bone = new Bone(
             key,
             skeleton,
             parent, // partSpecs[key].parentIdx == -1 ? root : Object.keys(partSpecs).indexOf(key)boneMap[pIdx],
-            Matrix.Translation(partSpecs[key].matrix.x, partSpecs[key].matrix.y, partSpecs[key].matrix.z)
+            Matrix.Translation(partSpecs[key as keyof typeof partSpecs].matrix.x, partSpecs[key as keyof typeof partSpecs].matrix.y, partSpecs[key as keyof typeof partSpecs].matrix.z)
         );
         boneMap.push(b);
     }
 
-    const partMeshes = [];
+    const partMeshes = [] as Mesh[]; // track meshes for merging
 
-    const vertexRanges = []; // track ranges of vertices for bone assignment
+    const vertexRanges : { boneName: string; start: number; end: number }[] = []; // track ranges of vertices for bone assignment
     let vertexOffset = 0;
 
     boneMap.forEach((bone, index) => {
         // console.log("Mesh:",bone.name);
         const mesh = MeshBuilder.CreateBox("part_" + bone.name, {
-            width: partSpecs[bone.name].size.x,
-            height: partSpecs[bone.name].size.y,
-            depth: partSpecs[bone.name].size.z
+            width: partSpecs[bone.name as keyof typeof partSpecs].size.x,
+            height: partSpecs[bone.name as keyof typeof partSpecs].size.y,
+            depth: partSpecs[bone.name as keyof typeof partSpecs].size.z
         }, scene);
 
         mesh.position = bone.getAbsolutePosition();
 
         const mat = new StandardMaterial("mat" + index, scene);
-        mat.diffuseColor = Color3.FromHexString(partSpecs[bone.name].color);
+        mat.diffuseColor = Color3.FromHexString(partSpecs[bone.name as keyof typeof partSpecs].color);
         mesh.material = mat;
         mesh.skeleton = skeleton;
 
-        const vertexCount = VertexData.ExtractFromMesh(mesh).positions.length / 3;
+        const vertexData = VertexData.ExtractFromMesh(mesh);
+        const vertexCount = vertexData.positions ? vertexData.positions.length / 3 : 0;
         // console.log("Pushing bone:", bone.name, "vertexCount:", vertexCount);
         vertexRanges.push({ boneName: bone.name, start: vertexOffset, end: vertexOffset + vertexCount });
         vertexOffset += vertexCount;
@@ -154,11 +177,14 @@ function createSkinnedPerson(scene) {
     });
 
     const merged = Mesh.MergeMeshes(partMeshes, true, true, undefined, false, true);
-    merged.skeleton = skeleton;
-    merged.alwaysSelectAsActiveMesh = true; // disables frustum culling
+    merged!.skeleton = skeleton;
+    merged!.alwaysSelectAsActiveMesh = true; // disables frustum culling
 
+    if (!merged) {
+        throw new Error("Mesh.MergeMeshes returned null");
+    }
     const vertexData = VertexData.ExtractFromMesh(merged);
-    const numVertices = vertexData.positions.length / 3;
+    const numVertices = vertexData.positions!.length / 3;
     const matricesIndices = [];
     const matricesWeights = [];
 
@@ -167,7 +193,7 @@ function createSkinnedPerson(scene) {
             for (const range of vertexRanges) {
                 if (i >= range.start && i < range.end) {
                     const bone = skeleton.bones.find(b => b.name === range.boneName);
-                    const bIdx = skeleton.bones.indexOf(bone)
+                    const bIdx = bone ? skeleton.bones.indexOf(bone) : -1;
                     // console.log("Bone index:", bIdx, "for bone:", bone.name);
                     return bIdx
                 }
@@ -200,8 +226,8 @@ function createSkinnedPerson(scene) {
         scene
     );
     merged.physicsImpostor.onCollideEvent = (self, other) => {
-        const selfName = self.object?.name || "unknown";
-        const otherName = other.object?.name || "unknown";
+        const selfName = (self.object as Mesh)?.name || "unknown";
+        const otherName = (other.object as Mesh)?.name || "unknown";
         if (otherName !== "ground") {
             console.log(`Collision detected: self = ${selfName}, other = ${otherName}`);
             scene.state.person.speed = 0;
@@ -215,24 +241,25 @@ function createSkinnedPerson(scene) {
     // push root before retuning
     boneMap.unshift(root)
 
-    const bones = boneMap.reduce((acc, bone) => {
+    const bones = boneMap.reduce((acc: Record<string, Bone>, bone) => {
         acc[bone.name] = bone;
         return acc;
-    }, {});
+    }, {} as Record<string, Bone>);
     console.log("bones:", bones);
 
-
-    return {
+    const skinnedPerson: SkinnedPerson = {
         mesh: merged,
         skeleton: skeleton,
         bones: bones,
         velocity: new Vector3(0, 0, 0)
-
     };
+
+    return skinnedPerson;
+
 }
 
 
-function animatePerson(ragdoll, scene: Scene, engine: Engine) {
+function animatePerson(ragdoll:SkinnedPerson, scene: CustomScene, engine: Engine) {
     // Simple walking animation using bone rotations
     let time = 0;
     scene.onBeforeRenderObservable.add(() => {
@@ -276,7 +303,7 @@ function animatePerson(ragdoll, scene: Scene, engine: Engine) {
             const correctionDir = localY.scale(-1).add(localZ.scale(-0.5)).normalize();
             const impulse = correctionDir.scale(basePower);
             console.log("Impulse:", impulse);
-            ragdoll.mesh.physicsImpostor.applyImpulse(impulse, ragdoll.mesh.getAbsolutePosition());
+            ragdoll.mesh.physicsImpostor!.applyImpulse(impulse, ragdoll.mesh.getAbsolutePosition());
         }
 
 
@@ -301,10 +328,10 @@ function animatePerson(ragdoll, scene: Scene, engine: Engine) {
         if (scene.state.person.fallen && Math.abs(angleDeg) < 10 && !scene.state.person.recovering) {
             console.log("Recovering!");
             scene.state.person.recovering = true;
-            ragdoll.mesh.physicsImpostor.setLinearVelocity(Vector3.Zero());
-            ragdoll.mesh.physicsImpostor.setAngularVelocity(Vector3.Zero());
-            ragdoll.mesh.physicsImpostor.setDeltaRotation(Quaternion.Identity());
-            ragdoll.mesh.physicsImpostor.setDeltaPosition(ragdoll.mesh.getAbsolutePosition().add(new Vector3(0, 1, 0)));
+            ragdoll.mesh.physicsImpostor!.setLinearVelocity(Vector3.Zero());
+            ragdoll.mesh.physicsImpostor!.setAngularVelocity(Vector3.Zero());
+            ragdoll.mesh.physicsImpostor!.setDeltaRotation(Quaternion.Identity());
+            ragdoll.mesh.physicsImpostor!.setDeltaPosition(ragdoll.mesh.getAbsolutePosition().add(new Vector3(0, 1, 0)));
         }
 
         if (!scene.state.person.fallen) {
@@ -315,12 +342,12 @@ function animatePerson(ragdoll, scene: Scene, engine: Engine) {
             ragdoll.bones.leftFoot.setRotation(new Vector3(Math.sin(time * speed + Math.PI) * 0.3, 0, 0), Space.LOCAL);
             ragdoll.bones.rightFoot.setRotation(new Vector3(Math.sin(time * speed) * 0.3, 0, 0), Space.LOCAL);
 
-            const velocity = ragdoll.mesh.physicsImpostor.getLinearVelocity();
-            const isGrounded = Math.abs(velocity.y) < 0.1;
+            const velocity = ragdoll.mesh.physicsImpostor!.getLinearVelocity();
+            const isGrounded = Math.abs(velocity!.y) < 0.1;
 
             if (isGrounded) {
                 const walkImpulse = new Vector3(0, 0, -0.01);
-                ragdoll.mesh.physicsImpostor.applyImpulse(walkImpulse, ragdoll.mesh.getAbsolutePosition());
+                ragdoll.mesh.physicsImpostor!.applyImpulse(walkImpulse, ragdoll.mesh.getAbsolutePosition());
             }
         }
 

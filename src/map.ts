@@ -8,7 +8,6 @@ import {
   StandardMaterial,
   DynamicTexture,
   Scene,
-  Vector3,
   Color3,
   Mesh,
 } from "@babylonjs/core";
@@ -198,7 +197,7 @@ async function createLeafletGround(
   const startY = centerY - Math.floor(tileCount / 2);
   */
 
-  const { x: tileXExact, y: tileYExact, pixelSize: pxSize } = latLonToTileXY(centerLat, centerLon, zoom, utm32)
+  const { x: tileXExact, y: tileYExact } = latLonToTileXY(centerLat, centerLon, zoom, utm32)
   // console.log("Tile:", tileXExact, tileYExact, pxSize)
 
   // Integer tile range
