@@ -11,6 +11,39 @@ import { createLeafletTexture, latLonToTileXY } from "./map.ts"
 
 import { createSkinnedPerson, animatePerson } from "./person.ts";
 
+import Papa from "papaparse"
+
+type BikeAccident = {lat:number, lon:number, cat:number};
+
+async function loadBikeAccidents(): Promise<BikeAccident[]> {
+  return new Promise((resolve, reject) => {
+    Papa.parse("/unfall2023.csv", {
+      header: true,
+      download: true,
+      dynamicTyping: true,
+      delimiter: ";",
+      complete: (results) => {
+        console.log("CSV data:", results.data);
+        const bikeAccidents: BikeAccident[] = [];
+        results.data.forEach((row: any) => {
+          if (row.IstRad) {
+            const lon = parseFloat(row.XGCSWGS84);
+            const lat = parseFloat(row.YGCSWGS84);
+            const cat = parseInt(row.UKATEGORIE);
+            bikeAccidents.push({ lat, lon, cat });
+          }
+        });
+        resolve(bikeAccidents);
+      },
+      error: (error) => {
+        console.error("Error loading CSV:", error);
+        reject(error);
+      }
+    });
+  });
+}
+
+
 const canvas = document.createElement("canvas");
 canvas.style.width = "100%";
 canvas.style.height = "100%";
@@ -90,11 +123,13 @@ const mapCenters = {
 const tileGrid = Array.from({ length: ngTiles * 2 + 1 }, () => Array(ngTiles * 2 + 1).fill(0));
 console.log("Tile grid", tileGrid);
 
+/*
 const accidents = [
   { name: "amalienLeopold", lon: 8.39011656400004, lat: 49.0094725400001 },
   { name: "friedrichsplatz", lon: 8.40058421800006, lat: 49.0078467810001 },
   { name: "a8", lat: 48.97072, lon: 8.44394 },
 ]
+*/
 
 const coord2pos = (lat: number, lon: number, zoom: number, scale: number, utm32: boolean = false) => {
   if (tileGrid[ngTiles][ngTiles][0] === -1 || tileGrid[ngTiles][ngTiles][1] === -1) {
@@ -106,7 +141,8 @@ const coord2pos = (lat: number, lon: number, zoom: number, scale: number, utm32:
   const tile = [Math.floor(x), Math.floor(y)]
   console.log("Tile:", tile);
   if (Math.abs(tile[0] - tileGrid[ngTiles][ngTiles][0]) > ngTiles || Math.abs(tile[1] - tileGrid[ngTiles][ngTiles][1]) > ngTiles) {
-    throw new Error(`Position out of tile range: ${tile}`);
+    console.log(`Position out of tile range: ${tile}`);
+    return new Vector3(0, 0, 0);
   }
   const offs = [Math.floor(tileSize * (x - tile[0])),
   Math.floor(tileSize * (y - tile[1]))]
@@ -204,15 +240,20 @@ if (useMap) {
     // convert unfall coordinates to babylon
     const accMat = new StandardMaterial("accMat", scene);
     accMat.diffuseColor = Color3.Red();
+
+    const accidents = await loadBikeAccidents();
+
     accidents.forEach((acc, idx) => {
       const lon = acc.lon;
       const lat = acc.lat;
       const pos = coord2pos(lat, lon, zoom + zoomAdjust, groundScale, USE_UTM32);
-      console.log("Accident", acc.name, pos);
-      const accCube = MeshBuilder.CreateBox(`accCube_${idx}`, { size: 5 }, scene);
-      accCube.material = accMat;
-      pos.y += 2.5
-      accCube.position = pos;
+      if (pos.x != 0 && pos.z != 0) {
+        console.log("Accident out of tile range");
+        const accCube = MeshBuilder.CreateBox(`accCube_${idx}`, { size: 5 }, scene);
+        accCube.material = accMat;
+        pos.y += 2.5
+        accCube.position = pos;
+      }
     });
   }
 
