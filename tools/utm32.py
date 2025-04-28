@@ -27,7 +27,7 @@ def latlon_to_tilexy_utm32(lat, lon, zoom):
     x = (X - originX) / tile_span
     y = (originY - Y) / tile_span  # invert Y
 
-    return [x,y]
+    return [x,y,pixel_size]
 
 # Example usage:
 if __name__ == "__main__":
