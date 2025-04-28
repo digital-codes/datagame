@@ -13,7 +13,7 @@ import { createSkinnedPerson, animatePerson } from "./person.ts";
 
 import Papa from "papaparse"
 
-type BikeAccident = {lat:number, lon:number, cat:number};
+type BikeAccident = { lat: number, lon: number, cat: number };
 
 async function loadBikeAccidents(): Promise<BikeAccident[]> {
   return new Promise((resolve, reject) => {
@@ -177,6 +177,17 @@ function findFirstMeshWithGeometry(meshes: AbstractMesh[]): Mesh | null {
 // Load both GLTF models asynchronously
 const loadModel = async (path: string, merge: boolean = false) => {
   const result = await ImportMeshAsync(path, scene);
+  // List all animation groups and their frame ranges
+  const ag = result.animationGroups || [];
+  if (ag.length > 0) {
+    ag.forEach(group => {
+      console.log("Animation Group Name:", group.name);
+      console.log("From Frame:", group.from);
+      console.log("To Frame:", group.to);
+      group.stop();
+    });
+  }
+
   if (merge) {
     const meshes = result.meshes.filter(mesh => mesh instanceof Mesh && mesh.getTotalVertices() > 0) as Mesh[];
     if (meshes.length === 0) throw new Error(`No meshes with geometry found in ${path}`);
@@ -197,93 +208,106 @@ if (useMap) {
 
   (async () => {
 
-  const gtx = await createLeafletTexture(scene,
-    mapCenters.kaZoo.lat, mapCenters.kaZoo.lon, zoom + zoomAdjust, ngTiles, USE_UTM32);
-  console.log("groundTexture dims", gtx.dims);
+    const gtx = await createLeafletTexture(scene,
+      mapCenters.kaZoo.lat, mapCenters.kaZoo.lon, zoom + zoomAdjust, ngTiles, USE_UTM32);
+    console.log("groundTexture dims", gtx.dims);
 
-  const centerTileX = gtx.dims[4];
-  const centerTileY = gtx.dims[5];
+    const centerTileX = gtx.dims[4];
+    const centerTileY = gtx.dims[5];
 
-  for (let i = -ngTiles; i <= ngTiles; i++) {
-    for (let j = -ngTiles; j <= ngTiles; j++) {
-      const tileX = centerTileX + i;
-      const tileY = centerTileY + j;
-      tileGrid[ngTiles - j][ngTiles + i] = [tileX, tileY];
-    }
-  }
-  console.log("Filled Tile Grid", tileGrid);
-
-  const groundMat = new StandardMaterial("leafletMat", scene);
-  groundMat.diffuseTexture = gtx.texture;
-  groundMat.specularColor = new Color3(0.5, 0.5, 0.5); // Adjust reflectivity
-  groundMat.specularPower = 100; // Control the sharpness of the reflection
-  const groundScale = groundSize / gtx.dims[2]; // canvas width in pixels
-  console.log("groundScale", groundScale, groundSize, gtx.dims[2]);
-  const pxSize = gtx.dims[3];
-  const unitSize = pxSize / groundScale
-  console.log("ground px / unit size [m]", pxSize, unitSize);
-  // compute offset of target to center
-  const offsetX = -(gtx.dims[0] - tileSize / 2) * groundScale
-  const offsetY = (gtx.dims[1] - tileSize / 2) * groundScale
-  console.log("target offset", offsetX, offsetY);
-
-  ground.material = groundMat;
-  ground.rotation = new Vector3(0, Math.PI, 0);
-
-  if (mapDebug) {
-    const blueCube = MeshBuilder.CreateBox("blueCube", { size: 10 }, scene);
-    blueCube.position = new Vector3(offsetX, 5, offsetY);
-    const blueMat = new StandardMaterial("blueMat", scene);
-    blueMat.diffuseColor = Color3.Blue();
-    blueCube.material = blueMat;
-
-    // convert unfall coordinates to babylon
-    const accMat = new StandardMaterial("accMat", scene);
-    accMat.diffuseColor = Color3.Red();
-
-    const accidents = await loadBikeAccidents();
-
-    accidents.forEach((acc, idx) => {
-      const lon = acc.lon;
-      const lat = acc.lat;
-      const pos = coord2pos(lat, lon, zoom + zoomAdjust, groundScale, USE_UTM32);
-      if (pos.x != 0 && pos.z != 0) {
-        console.log("Accident out of tile range");
-        const accCube = MeshBuilder.CreateBox(`accCube_${idx}`, { size: 5 }, scene);
-        accCube.material = accMat;
-        pos.y += 2.5
-        accCube.position = pos;
+    for (let i = -ngTiles; i <= ngTiles; i++) {
+      for (let j = -ngTiles; j <= ngTiles; j++) {
+        const tileX = centerTileX + i;
+        const tileY = centerTileY + j;
+        tileGrid[ngTiles - j][ngTiles + i] = [tileX, tileY];
       }
-    });
-  }
+    }
+    console.log("Filled Tile Grid", tileGrid);
+
+    const groundMat = new StandardMaterial("leafletMat", scene);
+    groundMat.diffuseTexture = gtx.texture;
+    groundMat.specularColor = new Color3(0.5, 0.5, 0.5); // Adjust reflectivity
+    groundMat.specularPower = 100; // Control the sharpness of the reflection
+    const groundScale = groundSize / gtx.dims[2]; // canvas width in pixels
+    console.log("groundScale", groundScale, groundSize, gtx.dims[2]);
+    const pxSize = gtx.dims[3];
+    const unitSize = pxSize / groundScale
+    console.log("ground px / unit size [m]", pxSize, unitSize);
+    // compute offset of target to center
+    const offsetX = -(gtx.dims[0] - tileSize / 2) * groundScale
+    const offsetY = (gtx.dims[1] - tileSize / 2) * groundScale
+    console.log("target offset", offsetX, offsetY);
+
+    ground.material = groundMat;
+    ground.rotation = new Vector3(0, Math.PI, 0);
+
+    if (mapDebug) {
+      const blueCube = MeshBuilder.CreateBox("blueCube", { size: 10 }, scene);
+      blueCube.position = new Vector3(offsetX, 5, offsetY);
+      const blueMat = new StandardMaterial("blueMat", scene);
+      blueMat.diffuseColor = Color3.Blue();
+      blueCube.material = blueMat;
+
+      // convert unfall coordinates to babylon
+      const accMat = new StandardMaterial("accMat", scene);
+      accMat.diffuseColor = Color3.Red();
+
+      const accidents = await loadBikeAccidents();
+
+      accidents.forEach((acc, idx) => {
+        const lon = acc.lon;
+        const lat = acc.lat;
+        const pos = coord2pos(lat, lon, zoom + zoomAdjust, groundScale, USE_UTM32);
+        if (pos.x != 0 && pos.z != 0) {
+          console.log("Accident out of tile range");
+          const accCube = MeshBuilder.CreateBox(`accCube_${idx}`, { size: 5 }, scene);
+          accCube.material = accMat;
+          pos.y += 2.5
+          accCube.position = pos;
+        }
+      });
+    }
 
 
-  const bikeModel = await loadModel("nextbike.glb", true) || null;
-  if (!bikeModel) {
-    console.error("Bike model not found");
-    throw new Error("Bike model not found");
-  }
-  console.log("Bike model", bikeModel);
-  bikeModel.setEnabled(false);
-  bikeModel.isVisible = false;
+    const bikeModel = await loadModel("nextbike.glb", true) || null;
+    //const bikeModel = await loadModel("Man.glb", true) || null;
 
-  // Create 2 instances of model1 (moveable)
-  const bikes: (Mesh | InstancedMesh)[] = [];
-  // model1.material = texMat;
-  for (let i = 0; i < 5; i++) {
-    const inst = bikeModel.createInstance("bike_" + i) as InstancedMesh;
-    //const inst = bikeModel.clone("bike_" + i);
-    inst.isVisible = true;
-    inst.setEnabled(true);
-    inst.scaling = new Vector3(10, 10, 10)
-    inst.position = new Vector3(i * 10 - 20, 0, 25);
-    inst.showBoundingBox = true;
-    inst.physicsImpostor = new PhysicsImpostor(
-      inst, PhysicsImpostor.BoxImpostor, { mass: 3, restitution: 0.2, friction: .5 }, scene
-    );
+    bikeModel!.computeWorldMatrix(true);
+    const boundingInfo = bikeModel!.getBoundingInfo();
+    const size = boundingInfo.boundingBox.maximumWorld.subtract(boundingInfo.boundingBox.minimumWorld);
+    console.log("Bike model size", size);
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const targetSize = 20.0;
+    const scaleFactor = targetSize / maxDim;
+    bikeModel!.scaling.scaleInPlace(scaleFactor);
+    // get model's Y position to ensure base is above ground on instances
+    const bikeBoundingBox = bikeModel!.getBoundingInfo().boundingBox;
+    const bikeBaseY = bikeBoundingBox.minimumWorld.y;
 
-    bikes.push(inst);
-  }
+    if (!bikeModel) {
+      console.error("Bike model not found");
+      throw new Error("Bike model not found");
+    }
+    console.log("Bike model", bikeModel);
+    bikeModel.setEnabled(false);
+    bikeModel.isVisible = false;
+
+    // Create 2 instances of model1 (moveable)
+    const bikes: (Mesh | InstancedMesh)[] = [];
+    // model1.material = texMat;
+    for (let i = 0; i < 5; i++) {
+      const inst = bikeModel.createInstance("bike_" + i) as InstancedMesh;
+      //const inst = bikeModel.clone("bike_" + i);
+      inst.isVisible = true;
+      inst.setEnabled(true);
+      inst.position = new Vector3(i * 10 - 20, Math.abs(bikeBaseY * scaleFactor), 25);
+      inst.showBoundingBox = true;
+      inst.physicsImpostor = new PhysicsImpostor(
+        inst, PhysicsImpostor.BoxImpostor, { mass: 3, restitution: 0.2, friction: .5 }, scene
+      );
+
+      bikes.push(inst);
+    }
   })();
 
 } else {
