@@ -1,0 +1,42 @@
+Man by Quaternius (https://poly.pizza/m/HMnuH5geEG)
+
+Woman by Quaternius (https://poly.pizza/m/AQsd9ngvKU)
+
+
+That means your GLB has AnimationGroups where:
+
+    HumanArmature is the skeleton or node name,
+
+    Man_Walk, Man_Idle, Man_Walk, etc., are AnimationGroup names.
+    Or Female_Walk ...
+
+
+
+BABYLON.SceneLoader.ImportMesh("", "path/to/", "yourModel.glb", scene, function (meshes, particleSystems, skeletons, animationGroups) {
+    // List all animation groups
+    console.log(animationGroups.map(ag => ag.name));
+
+   // List all animation groups and their frame ranges
+    animationGroups.forEach(group => {
+        console.log("Animation Group Name:", group.name);
+        console.log("From Frame:", group.from);
+        console.log("To Frame:", group.to);
+    });
+
+    // STOP all animations first (optional, so they don't overlap)
+    animationGroups.forEach(ag => ag.stop());
+
+
+    // Find a specific animation group by name
+    const poseName = "HumanArmature|Man_idle"; // The pose/animation you want
+    const pose = animationGroups.find(ag => ag.name === poseName);
+
+    if (pose) {
+        // Start the pose animation
+        pose.start(false, 1.0, pose.from, pose.to, false); 
+        // (no loop, normal speed, from start frame to end frame, no loop)
+    }
+});
+
+
+
