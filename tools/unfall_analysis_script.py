@@ -12,9 +12,12 @@ df_2022 = pd.read_csv("/mnt_ai/data/unfallAtlas/csv/Unfallorte2022_LinRef.csv", 
 df_2021 = pd.read_csv("/mnt_ai/data/unfallAtlas/csv/Unfallorte2021_LinRef.csv", decimal=",", sep=";")
 df_2020 = pd.read_csv("/mnt_ai/data/unfallAtlas/csv/Unfallorte2020_LinRef.csv", decimal=",", sep=";")
 df_2019 = pd.read_csv("/mnt_ai/data/unfallAtlas/csv/Unfallorte2019_LinRef.csv", decimal=",", sep=";")
+df_2018 = pd.read_csv("/mnt_ai/data/unfallAtlas/csv/Unfallorte2018_LinRef.csv", decimal=",", sep=";")
+df_2017 = pd.read_csv("/mnt_ai/data/unfallAtlas/csv/Unfallorte2017_LinRef.csv", decimal=",", sep=";")
+df_2016 = pd.read_csv("/mnt_ai/data/unfallAtlas/csv/Unfallorte2016_LinRef.csv", decimal=",", sep=";")
 
 # Combine all dataframes into one
-df = pd.concat([df, df_2022, df_2021,df_2020,df_2019], ignore_index=True)
+df = pd.concat([df, df_2022, df_2021,df_2020,df_2019,df_2018,df_2017,df_2016], ignore_index=True)
 
 df.rename(columns={
     'XGCSWGS84': 'lon',
