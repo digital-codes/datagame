@@ -1,6 +1,5 @@
 import proj4 from "proj4";
 
-const USE_UTM32 = true
 // Include proj4 (from CDN or your build system)
 proj4.defs("EPSG:25832", "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs");
 
@@ -14,8 +13,8 @@ import {
   Mesh,
 } from "@babylonjs/core";
 
-function latLonToTileXY(lat: number, lon: number, zoom: number): { x: number; y: number, pixelSize: number } {
-  if (USE_UTM32) {
+function latLonToTileXY(lat: number, lon: number, zoom: number, utm32: boolean = false): { x: number; y: number, pixelSize: number } {
+  if (utm32) {
     // Convert lat/lon to UTM32 tile coordinates
     const {x,y, pixelSize} = latLonToTileXYutm32(lat, lon, zoom)
     return { x, y, pixelSize };
@@ -94,9 +93,10 @@ Bearbeiten
 // UTM32 04/11/6 => 07/89/51 => 08/178/102 => 09/357/205 (zoo)
 
 // Get OpenStreetMap tile URL
-function getTileUrl(x: number, y: number, z: number): string {
+// FIXME: use tile server from leaflet
+function getTileUrl(x: number, y: number, z: number, utm32:boolean = false): string {
   let url
-  if (!USE_UTM32) {
+  if (!utm32) {
     url = `https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/${z}/${y}/${x}.png`
   } else {
     url = `https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/DE_EPSG_25832_ADV/${z.toString().padStart(2, "0")}/${y}/${x}.png`
@@ -106,7 +106,8 @@ function getTileUrl(x: number, y: number, z: number): string {
 }
 
 // Draw multiple tiles to a canvas
-async function drawTiles(ctx: CanvasRenderingContext2D, tileX: number, tileY: number, zoom: number, count: number) {
+async function drawTiles(ctx: CanvasRenderingContext2D, 
+  tileX: number, tileY: number, zoom: number, count: number, utm32: boolean = false) {
   const tileSize = 256;
   for (let dx = -count; dx <= count; dx++) {
     for (let dy = -count; dy <= count; dy++) {
@@ -114,7 +115,7 @@ async function drawTiles(ctx: CanvasRenderingContext2D, tileX: number, tileY: nu
       const y = tileY + dy;
       const img = new Image();
       img.crossOrigin = "anonymous";
-      img.src = getTileUrl(x, y, zoom);
+      img.src = getTileUrl(x, y, zoom, utm32);
 
       await new Promise<void>((res, rej) => {
         img.onload = () => {
@@ -138,6 +139,7 @@ async function createLeafletTexture(
   centerLon: number,
   zoom: number,
   tileCount: number = 1,
+  utm32: boolean = false
 ): Promise<{ texture: DynamicTexture; dims: number[] }> {
   const tileSize = 256;
   const canvasSize = (tileCount * 2 + 1) * tileSize;
@@ -152,8 +154,7 @@ async function createLeafletTexture(
   const startX = centerX - Math.floor(tileCount / 2);
   const startY = centerY - Math.floor(tileCount / 2);
   */
-  zoom = USE_UTM32 ? zoom - 5 : zoom
-  const { x: tileXExact, y: tileYExact, pixelSize: pxSize } = latLonToTileXY(centerLat, centerLon, zoom)
+  const { x: tileXExact, y: tileYExact, pixelSize: pxSize } = latLonToTileXY(centerLat, centerLon, zoom, utm32)
   //console.log("Tile:", tileXExact, tileYExact, pxSize)
 
   // Integer tile range
@@ -166,11 +167,11 @@ async function createLeafletTexture(
   console.log("offset", offsetX, offsetY);
   //console.log(centerLat,centerLon)
   //console.log(startX,startY,tileCount)
-  await drawTiles(ctx, startX, startY, zoom, tileCount);
+  await drawTiles(ctx, startX, startY, zoom, tileCount, utm32);
 
   const texture = new DynamicTexture("leafletMap", canvas, scene, false);
   texture.update()
-  return { texture: texture as DynamicTexture, dims: [offsetX, offsetY, canvasSize, pxSize] };
+  return { texture: texture as DynamicTexture, dims: [offsetX, offsetY, canvasSize, pxSize, startX, startY] };
 }
 
 // Main function to create the leaflet ground
@@ -180,7 +181,8 @@ async function createLeafletGround(
   centerLon: number,
   zoom: number,
   tileCount: number = 1,
-  size = 1000
+  size = 1000,
+  utm32: boolean = false
 
 ): Promise<Mesh> {
   const tileSize = 256;
@@ -196,8 +198,7 @@ async function createLeafletGround(
   const startY = centerY - Math.floor(tileCount / 2);
   */
 
-  zoom = USE_UTM32 ? zoom - 5 : zoom
-  const { x: tileXExact, y: tileYExact, pixelSize: pxSize } = latLonToTileXY(centerLat, centerLon, zoom)
+  const { x: tileXExact, y: tileYExact, pixelSize: pxSize } = latLonToTileXY(centerLat, centerLon, zoom, utm32)
   // console.log("Tile:", tileXExact, tileYExact, pxSize)
 
   // Integer tile range
