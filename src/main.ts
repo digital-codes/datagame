@@ -77,12 +77,43 @@ const tileGrid = Array.from({ length: ngTiles*2 + 1 }, () => Array(ngTiles*2 + 1
 console.log("Tile grid", tileGrid);
 
 const accidents = [
-  { name:"amalienLeopold",	x: 455400.1622,y:	5428687.9744, lon:8.39011656400004,lat:	49.0094725400001},
-  { name:"friedrichsplatz",	x: 456164.2146,	y: 5428501.1497, 	lon: 8.40058421800006, lat:49.0078467810001},
-  { name:"zoo",	x: 0,	y: 0, 	lon: mapCenters.kaZoo.lon, lat:mapCenters.kaZoo.lat},
-  {name:"a8",x:0,y:0, lat: 48.97072, lon: 8.44394},
-
+  { name:"amalienLeopold",	lon:8.39011656400004,lat:	49.0094725400001},
+  { name:"friedrichsplatz",	lon: 8.40058421800006, lat:49.0078467810001},
+  {name:"a8",lat: 48.97072, lon: 8.44394},
 ]
+
+const coord2pos = (lat: number, lon: number, zoom:number, scale: number, utm32:boolean = false) => {
+  if (tileGrid[ngTiles][ngTiles][0] === -1 || tileGrid[ngTiles][ngTiles][1] === -1) {
+    throw new Error("Center of tileGrid is [-1, -1]. This is unexpected.");
+  }
+  const { x, y, pixelSize } = latLonToTileXY(lat, lon, zoom, utm32);
+  console.log("X/Y position", x, y, pixelSize);
+
+  const tile = [Math.floor(x),Math.floor(y)]
+  console.log("Tile:", tile);
+  if (Math.abs(tile[0] - tileGrid[ngTiles][ngTiles][0]) > ngTiles || Math.abs(tile[1] - tileGrid[ngTiles][ngTiles][1]) > ngTiles) {
+    throw new Error(`Position out of tile range: ${tile}`);
+  }
+  const offs = [Math.floor(tileSize*(x - tile[0])), 
+                   Math.floor(tileSize*(y - tile[1]))]
+  console.log("Offset:", offs);
+  // offset in tile
+  let X = -(offs[0] - tileSize / 2) * scale
+  let Y = (offs[1] - tileSize / 2) * scale
+  // find tile and adjust offset
+  const tileOffsX = tile[0] - tileGrid[ngTiles][ngTiles][0]
+  const tileOffsY = tile[1] - tileGrid[ngTiles][ngTiles][1]
+  console.log("Tile offset", tileOffsX, tileOffsY);
+  X -= tileOffsX * tileSize * scale
+  Y += tileOffsY * tileSize * scale
+
+  const pos = new Vector3(X, 0, Y);
+  console.log("Final pos:", pos);
+
+  return pos;
+}
+
+
 
 // helper functions
 // Helper: recursively find first mesh with geometry
@@ -109,20 +140,6 @@ const loadModel = async (path: string, merge: boolean = false) => {
     return mesh;
   }
 };
-
-
-// convert unfall coordinates to babylon
-const accs = []
-accidents.forEach((acc) => {
-  const lon = acc.lon;
-  const lat = acc.lat;
-  const { x, y, pixelSize } = latLonToTileXY(lat, lon, zoom + zoomAdjust, USE_UTM32);
-  console.log("Accident", acc.name, x, y, pixelSize);
-  const pos = new Vector3(x, 0, y);
-  console.log("Accident", acc.name, pos);
-  accs.push(pos);
-});
-console.log("Accidents", accs);
 
 
 // Create leaflet texture
@@ -168,36 +185,19 @@ if (useMap) {
     blueMat.diffuseColor = Color3.Blue();
     blueCube.material = blueMat;
 
-    const redCube = MeshBuilder.CreateBox("blueCube", { size: 5 }, scene);
-
-    // offset in tile
-    const acc = accs[3]
-    const redTile = [Math.floor(acc.x),Math.floor(acc.z)]
-    console.log("Acc pos:", redTile);
-    if (Math.abs(redTile[0] - centerTileX) > ngTiles || Math.abs(redTile[1] - centerTileY) > ngTiles) {
-      console.log("Accident out of tile range", redTile, centerTileX, centerTileY);
-    }
-    const redOffs = [Math.floor(tileSize*(acc.x - redTile[0])), 
-                     Math.floor(tileSize*(acc.z - redTile[1]))]
-    console.log("Acc offset:", redOffs);
-    // offset in tile
-    let redX = -(redOffs[0] - tileSize / 2) * groundScale
-    let redY = (redOffs[1] - tileSize / 2) * groundScale
-    // find tile and adjust offset
-    const redTileOffsX = redTile[0] - tileGrid[ngTiles][ngTiles][0]
-    const redTileOffsY = redTile[1] - tileGrid[ngTiles][ngTiles][1]
-    console.log("Tile offset", redTileOffsX, redTileOffsY);
-    redX -= redTileOffsX * tileSize * groundScale
-    redY += redTileOffsY * tileSize * groundScale
-
-    //const redX = -offsetX + accs[0].x * groundScale
-    // const redY = offsetY + accs[0].y * groundScale
-    console.log("acc pos:", redX, redY);
-    redCube.position = new Vector3(redX, 15, redY);
-    const redMat = new StandardMaterial("redMat", scene);
-    redMat.diffuseColor = Color3.Red();
-    redCube.material = redMat;
-
+    // convert unfall coordinates to babylon
+    const accMat = new StandardMaterial("accMat", scene);
+    accMat.diffuseColor = Color3.Red();
+    accidents.forEach((acc,idx) => {
+      const lon = acc.lon;
+      const lat = acc.lat;
+      const pos = coord2pos(lat, lon, zoom + zoomAdjust, groundScale, USE_UTM32);
+      console.log("Accident", acc.name, pos);
+      const accCube = MeshBuilder.CreateBox(`accCube_${idx}`, { size: 5 }, scene);
+      accCube.material = accMat;
+      pos.y += 2.5
+      accCube.position = pos;
+    });
   }
 
   const bikeModel = await loadModel("nextbike.glb",true);
