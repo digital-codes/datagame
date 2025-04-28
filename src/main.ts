@@ -1,5 +1,5 @@
 //import { Engine, Scene, ArcRotateCamera, HemisphericLight, Vector3, MeshBuilder, StandardMaterial, Texture, Color3, SceneLoader, InstancedMesh } from "babylonjs";
-import { Engine, Scene, ArcRotateCamera, HemisphericLight, MotorEnabledJoint, Vector3, Mesh, AbstractMesh, ImportMeshAsync, MeshBuilder, StandardMaterial, Texture, Color3, InstancedMesh } from "@babylonjs/core";
+import { Engine, Scene, ArcRotateCamera, AnimationGroup, HemisphericLight, MotorEnabledJoint, Vector3, Mesh, AbstractMesh, ImportMeshAsync, MeshBuilder, StandardMaterial, Texture, Color3, InstancedMesh } from "@babylonjs/core";
 import { PhysicsImpostor, CannonJSPlugin, PhysicsJoint } from "@babylonjs/core/Physics";
 import * as CANNON from "cannon-es";
 import "@babylonjs/loaders";
@@ -186,6 +186,19 @@ const loadModel = async (path: string, merge: boolean = false) => {
       console.log("To Frame:", group.to);
       group.stop();
     });
+    // Find a specific animation group by name
+    const poseName = "HumanArmature|Man_Idle"; // The pose/animation you want
+    const pose = ag.find(g => g.name === poseName);
+
+    if (pose) {
+        // Start the pose animation
+        console.log(`Starting animation group ${poseName}`);
+        pose.goToFrame(pose.from);
+        // pose.start(false, 1.0, pose.from, pose.to, false); 
+        // (no loop, normal speed, from start frame to end frame, no loop)
+    } else {
+        console.log(`Animation group ${poseName} not found.`);
+    }   
   }
 
   if (merge) {
@@ -193,12 +206,12 @@ const loadModel = async (path: string, merge: boolean = false) => {
     if (meshes.length === 0) throw new Error(`No meshes with geometry found in ${path}`);
     meshes.forEach(mesh => mesh.parent = null);
     const merged = Mesh.MergeMeshes(meshes, true, true, undefined, false, true);
-    return merged;
+    return merged
   } else {
     const mesh = findFirstMeshWithGeometry(result.meshes);
     if (!mesh) throw new Error(`No mesh with geometry found in ${path}`);
     mesh.parent = null;
-    return mesh;
+    return mesh
   }
 };
 
@@ -269,8 +282,8 @@ if (useMap) {
     }
 
 
-    const bikeModel = await loadModel("nextbike.glb", true) || null;
-    //const bikeModel = await loadModel("Man.glb", true) || null;
+    //const bikeModel = await loadModel("nextbike.glb", true) || null;
+    const bikeModel = await loadModel("Bike.glb", true);
 
     bikeModel!.computeWorldMatrix(true);
     const boundingInfo = bikeModel!.getBoundingInfo();
@@ -305,7 +318,6 @@ if (useMap) {
       inst.physicsImpostor = new PhysicsImpostor(
         inst, PhysicsImpostor.BoxImpostor, { mass: 3, restitution: 0.2, friction: .5 }, scene
       );
-
       bikes.push(inst);
     }
   })();
