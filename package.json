@@ -9,19 +9,19 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/papaparse": "^5.3.15",
+    "@types/papaparse": "^5.3.16",
     "@types/proj4": "^2.5.6",
-    "typescript": "~5.7.2",
-    "vite": "^6.2.5"
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
   },
   "dependencies": {
-    "@babylonjs/core": "^8.1.1",
-    "@babylonjs/gui": "^8.1.1",
-    "@babylonjs/inspector": "^8.1.1",
-    "@babylonjs/loaders": "^8.1.1",
-    "@babylonjs/materials": "^8.1.1",
-    "@babylonjs/serializers": "^8.1.1",
-    "babylonjs": "^8.1.1",
+    "@babylonjs/core": "^8.7.0",
+    "@babylonjs/gui": "^8.7.0",
+    "@babylonjs/inspector": "^8.7.0",
+    "@babylonjs/loaders": "^8.7.0",
+    "@babylonjs/materials": "^8.7.0",
+    "@babylonjs/serializers": "^8.7.0",
+    "babylonjs": "^8.7.0",
     "cannon-es": "^0.20.0",
     "papaparse": "^5.5.2",
     "proj4": "^2.15.0"
